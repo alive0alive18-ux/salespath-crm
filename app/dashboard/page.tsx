@@ -233,6 +233,7 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
 export default function Home() {
   const [page, setPage] = useState('dashboard')
   const [user, setUser] = useState<any>(null)
+  const [salesperson, setSalesperson] = useState<any>(null)
   const [clients, setClients] = useState<any[]>([])
   const [partners, setPartners] = useState<any[]>([])
   const [referrals, setReferrals] = useState<any[]>([])
@@ -250,13 +251,15 @@ export default function Home() {
       setUser(user)
       const today = new Date().toISOString().split('T')[0]
       const nextWeek = new Date(Date.now()+7*24*60*60*1000).toISOString().split('T')[0]
-      const [c,p,r,sc,wk] = await Promise.all([
+      const [sp,c,p,r,sc,wk] = await Promise.all([
+        supabase.from('salespersons').select('*').eq('id',user.id).single(),
         supabase.from('clients').select('*').order('created_at',{ascending:false}),
         supabase.from('partners').select('*').order('created_at',{ascending:false}),
         supabase.from('referrals').select('*, clients(name), partners(name)').order('clicked_at',{ascending:false}),
         supabase.from('schedules').select('*, clients(name, car_model)').eq('is_contacted',false).eq('scheduled_date',today),
         supabase.from('schedules').select('*, clients(name, car_model)').eq('is_contacted',false).gt('scheduled_date',today).lte('scheduled_date',nextWeek).order('scheduled_date'),
       ])
+      setSalesperson(sp.data)
       setClients(c.data||[]); setPartners(p.data||[]); setReferrals(r.data||[])
       setSchedules(sc.data||[]); setWeekSchedules(wk.data||[]); setLoading(false)
     }
@@ -296,8 +299,8 @@ export default function Home() {
           ))}
         </div>
         <div style={{padding:'20px 22px',borderTop:`1px solid ${NAVY2}`}}>
-          <div style={{fontSize:13,color:CREAM,marginBottom:2,fontWeight:500}}>조원준 컨설턴트</div>
-          <div style={{fontSize:11,color:NAVY3,marginBottom:14}}>Mercedes-Benz</div>
+          <div style={{fontSize:13,color:CREAM,marginBottom:2,fontWeight:500}}>{salesperson?.name || user?.email} 컨설턴트</div>
+          <div style={{fontSize:11,color:NAVY3,marginBottom:14}}>{salesperson?.brand || ''}</div>
           <button style={{...btn(),fontSize:12,color:NAVY3,borderColor:NAVY2,width:'100%',letterSpacing:'.04em'}} onClick={signOut}>로그아웃</button>
         </div>
       </aside>
