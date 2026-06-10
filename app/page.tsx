@@ -44,47 +44,7 @@ export default function LandingPage() {
 
   return (
     <>
-      <style>{`
-        *{box-sizing:border-box;margin:0;padding:0;}
-        .nav-links{display:flex;align-items:center;gap:32px;}
-        .nav-login{display:block;}
-        .hero-title{font-size:52px;}
-        .hero-sub{font-size:18px;}
-        .stats-grid{grid-template-columns:repeat(4,1fr)!important;}
-        .features-grid{grid-template-columns:repeat(3,1fr)!important;}
-        .auto-grid{grid-template-columns:repeat(5,1fr)!important;}
-        .auto-arrow{display:block!important;}
-        .plans-grid{grid-template-columns:1fr 1fr!important;}
-        .reviews-grid{grid-template-columns:repeat(3,1fr)!important;}
-        .feature-card{padding:28px 26px!important;}
-        .feature-title{font-size:16px!important;}
-        .feature-desc{font-size:14px!important;}
-        @media(max-width:767px){
-          .nav-links{display:none!important;}
-          .nav-login{display:none!important;}
-          .hero-title{font-size:32px!important;letter-spacing:-.01em!important;}
-          .hero-sub{font-size:15px!important;}
-          .stats-grid{grid-template-columns:1fr 1fr!important;gap:12px!important;}
-          .features-grid{grid-template-columns:1fr 1fr!important;gap:12px!important;}
-          .auto-grid{grid-template-columns:1fr 1fr!important;gap:12px!important;}
-          .auto-arrow{display:none!important;}
-          .plans-grid{grid-template-columns:1fr!important;}
-          .reviews-grid{grid-template-columns:1fr!important;}
-          .feature-card{padding:16px 14px!important;}
-          .feature-title{font-size:13px!important;}
-          .feature-desc{font-size:12px!important;}
-          .section-title{font-size:26px!important;}
-          .section-pad{padding:40px 16px!important;}
-          .hero-pad{padding:56px 20px!important;}
-          .stats-pad{padding:28px 16px!important;}
-          .nav-pad{padding:0 16px!important;}
-          .hero-btn{padding:12px 24px!important;font-size:14px!important;}
-          .cta-title{font-size:24px!important;}
-          .plan-price{font-size:24px!important;}
-        }
-      `}</style>
-
-      <div style={{ fontFamily:"'Apple SD Gothic Neo','DM Sans',system-ui,sans-serif", color:TX1, background:WHITE }}>
+            <div style={{ fontFamily:"'Apple SD Gothic Neo','DM Sans',system-ui,sans-serif", color:TX1, background:WHITE }}>
 
         {/* 네비 */}
         <nav style={{ position:'sticky', top:0, zIndex:100, background:NAVY, borderBottom:`1px solid ${NAVY2}` }}>
