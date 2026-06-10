@@ -46,7 +46,7 @@ function getLabel(note:string){
   return {label:'연락',color:GOLD_TX,bg:GOLD_BG,bd:GOLD+'60'}
 }
 
-function ClientDetail({client,allClients=[],onClose,onUpdate}:any){
+function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
   const supabase=createClient()
   const [tab,setTab]=useState<'info'|'vehicle'|'history'|'estimates'>('info')
   const [editing,setEditing]=useState(false)
@@ -56,6 +56,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate}:any){
   const [notes,setNotes]=useState<any[]>([])
   const [estimates,setEstimates]=useState<any[]>([])
   const [uploading,setUploading]=useState(false)
+  const [confirmDelete,setConfirmDelete]=useState(false)
   const [form,setForm]=useState({
     name:client.name||'',phone:client.phone||'',email:client.email||'',
     address:client.address||'',contact_place:client.contact_place||'',
@@ -101,11 +102,30 @@ function ClientDetail({client,allClients=[],onClose,onUpdate}:any){
     if(data) setNotes(p=>[data[0],...p]);setNote('');setNoteDate(new Date().toISOString().split('T')[0])
   }
 
+  const deleteClient=async()=>{
+    const supabase2=createClient()
+    await supabase2.from('clients').delete().eq('id',client.id)
+    onDelete(client.id);onClose()
+  }
+
   const tabs=[{id:'info',l:'기본 정보'},{id:'vehicle',l:'차량 정보'},{id:'history',l:'연락 히스토리'},{id:'estimates',l:'견적서'}]
   const stg=getStage(client.stage||'first_visit')
 
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.6)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}} onClick={onClose}>
+      {confirmDelete&&(
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:2000}} onClick={e=>e.stopPropagation()}>
+          <div style={{background:WHITE,borderRadius:6,padding:32,width:360,textAlign:'center',boxShadow:'0 24px 80px rgba(0,0,0,0.3)'}}>
+            <div style={{fontSize:32,marginBottom:16}}>⚠️</div>
+            <div style={{fontSize:17,fontWeight:600,color:TX1,marginBottom:8}}>{client.name} 고객을 삭제할까요?</div>
+            <div style={{fontSize:13,color:TX3,marginBottom:24,lineHeight:1.6}}>삭제하면 모든 연락 기록, 견적서,<br/>스케줄이 함께 삭제됩니다.</div>
+            <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+              <button style={btn()} onClick={()=>setConfirmDelete(false)}>취소</button>
+              <button style={{...btn('navy'),background:RED}} onClick={deleteClient}>삭제하기</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{background:WHITE,borderRadius:6,width:660,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 24px 80px rgba(27,42,74,0.2)'}} onClick={e=>e.stopPropagation()}>
         <div style={{padding:'22px 28px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between',background:CREAM}}>
           <div style={{display:'flex',alignItems:'center',gap:14}}>
@@ -124,6 +144,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate}:any){
           <div style={{display:'flex',gap:8}}>
             {!editing&&tab!=='estimates'&&tab!=='history'&&<button style={btn('navy')} onClick={()=>setEditing(true)}>수정</button>}
             {editing&&<><button style={btn('gold')} onClick={save} disabled={saving}>{saving?'저장중...':'저장'}</button><button style={btn()} onClick={()=>setEditing(false)}>취소</button></>}
+            {!editing&&<button style={{...btn(),color:RED,borderColor:RED+'30'}} onClick={()=>setConfirmDelete(true)}>🗑 삭제</button>}
             <button style={{...btn(),fontSize:18,padding:'4px 12px',color:TX3}} onClick={onClose}>✕</button>
           </div>
         </div>
@@ -313,13 +334,14 @@ export default function Home(){
     {id:'partners',label:'제휴업체'},
     {id:'calendar',label:'캘린더'},
     {id:'report',label:'실적 리포트'},
+    {id:'profile',label:'프로필 설정'},
   ]
 
   if(loading) return <div style={{minHeight:'100vh',background:CREAM,display:'flex',alignItems:'center',justifyContent:'center',color:NAVY,fontSize:14}}>Loading...</div>
 
   return(
     <div style={{display:'flex',minHeight:'100vh',background:CREAM,fontFamily:"'DM Sans','Apple SD Gothic Neo',system-ui,sans-serif",fontSize:14}}>
-      {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} />}
+      {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} onDelete={(id:string)=>setClients(p=>p.filter(c=>c.id!==id))} />}
       <aside style={{width:210,background:NAVY,display:'flex',flexDirection:'column',flexShrink:0}}>
         <div style={{padding:'28px 22px 22px',borderBottom:`1px solid ${NAVY2}`}}>
           <div style={{fontSize:10,color:NAVY3,letterSpacing:'.22em',marginBottom:6,textTransform:'uppercase'}}>Sales CRM</div>
@@ -347,6 +369,7 @@ export default function Home(){
         {page==='partners'&&<Partners partners={partners} setPartners={setPartners} />}
         {page==='calendar'&&<Calendar />}
         {page==='report'&&<Report clients={clients} />}
+        {page==='profile'&&<Profile salesperson={salesperson} setSalesperson={setSalesperson} user={user} />}
       </main>
     </div>
   )
@@ -1146,6 +1169,107 @@ function Report({clients}:any){
               </div>
             )
           })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Profile({salesperson,setSalesperson,user}:any){
+  const supabase=createClient()
+  const [form,setForm]=useState({
+    name:salesperson?.name||'',
+    phone:salesperson?.phone||'',
+    brand:salesperson?.brand||'',
+    dealer_name:salesperson?.dealer_name||'',
+  })
+  const [saving,setSaving]=useState(false)
+  const [saved,setSaved]=useState(false)
+  const [pwForm,setPwForm]=useState({current:'',next:'',confirm:''})
+  const [pwSaving,setPwSaving]=useState(false)
+  const [pwMsg,setPwMsg]=useState('')
+  const [resetSent,setResetSent]=useState(false)
+
+  const BRANDS=['현대','기아','제네시스','쌍용(KG모빌리티)','르노코리아','GM 한국사업장','메르세데스-벤츠','BMW','아우디','폭스바겐','포르쉐','볼보','랜드로버','Jeep','푸조','시트로엥','미니(MINI)','렉서스','도요타','혼다','닛산','인피니티','캐딜락','링컨','포드','테슬라','기타']
+
+  const saveProfile=async()=>{
+    setSaving(true)
+    const{data:{user:u}}=await supabase.auth.getUser()
+    const{data}=await supabase.from('salespersons').update({name:form.name,phone:form.phone||null,brand:form.brand,dealer_name:form.dealer_name||null}).eq('id',u?.id).select()
+    if(data) setSalesperson(data[0])
+    setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2000)
+  }
+
+  const changePw=async()=>{
+    if(pwForm.next!==pwForm.confirm){setPwMsg('새 비밀번호가 일치하지 않아요');return}
+    if(pwForm.next.length<6){setPwMsg('비밀번호는 6자리 이상이어야 해요');return}
+    setPwSaving(true);setPwMsg('')
+    const{error}=await supabase.auth.updateUser({password:pwForm.next})
+    if(error) setPwMsg('비밀번호 변경 실패: '+error.message)
+    else{setPwMsg('✓ 비밀번호가 변경됐어요!');setPwForm({current:'',next:'',confirm:''})}
+    setPwSaving(false)
+  }
+
+  const sendReset=async()=>{
+    if(!user?.email) return
+    await supabase.auth.resetPasswordForEmail(user.email,{redirectTo:window.location.origin+'/login'})
+    setResetSent(true)
+  }
+
+  return(
+    <div>
+      <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>프로필 설정</div>
+      <div style={{fontSize:13,color:TX3,marginBottom:26}}>내 정보 및 계정 설정</div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+        {/* 프로필 정보 */}
+        <div style={card}>
+          <div style={cardH}><span>기본 정보</span></div>
+          <div style={{padding:22,display:'grid',gap:14}}>
+            <div><label style={lbl}>이름</label><input style={inp} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
+            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div>
+              <label style={lbl}>브랜드</label>
+              <select style={inp} value={form.brand} onChange={e=>setForm(p=>({...p,brand:e.target.value}))}>
+                <option value="">선택</option>
+                {BRANDS.map(b=><option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div><label style={lbl}>전시장명</label><input style={inp} placeholder="강남 공식 전시장" value={form.dealer_name} onChange={e=>setForm(p=>({...p,dealer_name:e.target.value}))} /></div>
+            <div style={{fontSize:13,color:TX3,padding:'10px 14px',background:CREAM,borderRadius:3}}>
+              📧 이메일: {user?.email}
+            </div>
+            <button style={btn('navy')} onClick={saveProfile} disabled={saving}>
+              {saving?'저장중...':saved?'✓ 저장됐어요!':'저장'}
+            </button>
+          </div>
+        </div>
+
+        {/* 비밀번호 변경 */}
+        <div>
+          <div style={card}>
+            <div style={cardH}><span>비밀번호 변경</span></div>
+            <div style={{padding:22,display:'grid',gap:14}}>
+              <div><label style={lbl}>새 비밀번호</label><input style={inp} type="password" placeholder="6자리 이상" value={pwForm.next} onChange={e=>setPwForm(p=>({...p,next:e.target.value}))} /></div>
+              <div><label style={lbl}>새 비밀번호 확인</label><input style={inp} type="password" placeholder="동일하게 입력" value={pwForm.confirm} onChange={e=>setPwForm(p=>({...p,confirm:e.target.value}))} /></div>
+              {pwMsg&&<div style={{fontSize:13,color:pwMsg.includes('✓')?GREEN:RED,padding:'10px 12px',background:pwMsg.includes('✓')?GREEN_BG:'#FFF5F5',borderRadius:3}}>{pwMsg}</div>}
+              <button style={btn('navy')} onClick={changePw} disabled={pwSaving}>{pwSaving?'변경중...':'비밀번호 변경'}</button>
+            </div>
+          </div>
+
+          <div style={card}>
+            <div style={cardH}><span>비밀번호를 잊으셨나요?</span></div>
+            <div style={{padding:22}}>
+              <div style={{fontSize:13,color:TX2,marginBottom:16,lineHeight:1.6}}>
+                가입한 이메일({user?.email})로 비밀번호 재설정 링크를 보내드려요.
+              </div>
+              {resetSent?(
+                <div style={{fontSize:13,color:GREEN,padding:'10px 12px',background:GREEN_BG,borderRadius:3}}>✓ 이메일을 확인해주세요!</div>
+              ):(
+                <button style={btn()} onClick={sendReset}>재설정 이메일 보내기</button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
