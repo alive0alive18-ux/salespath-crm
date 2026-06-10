@@ -44,41 +44,41 @@ export default function LandingPage() {
 
   return (
     <>
-            <div style={{ fontFamily:"'Apple SD Gothic Neo','DM Sans',system-ui,sans-serif", color:TX1, background:WHITE }}>
+      <div style={{ fontFamily:"'Apple SD Gothic Neo','DM Sans',system-ui,sans-serif", color:TX1, background:WHITE }}>
 
         {/* 네비 */}
         <nav style={{ position:'sticky', top:0, zIndex:100, background:NAVY, borderBottom:`1px solid ${NAVY2}` }}>
-          <div className="nav-pad" style={{ maxWidth:1100, margin:'0 auto', padding:'0 32px', display:'flex', alignItems:'center', justifyContent:'space-between', height:56 }}>
+          <div style={{ maxWidth:1100, margin:'0 auto', padding:'0 32px', display:'flex', alignItems:'center', justifyContent:'space-between', height:56 }}>
             <div style={{ fontSize:18, fontWeight:700, color:WHITE }}>SalesPath</div>
-            <div className="nav-links">
+            <div>
               {['기능','가격','후기'].map(m=>(
                 <a key={m} href={`#${m}`} style={{ fontSize:14, color:'#8A9EBF', textDecoration:'none' }}>{m}</a>
               ))}
             </div>
             <div style={{ display:'flex', gap:8 }}>
-              <button className="nav-login" onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:500, cursor:'pointer', border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0' }}>로그인</button>
+              <button onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:500, cursor:'pointer', border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0' }}>로그인</button>
               <button onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>무료 시작</button>
             </div>
           </div>
         </nav>
 
         {/* 히어로 */}
-        <section className="hero-pad" style={{ background:`linear-gradient(135deg,${NAVY} 0%,#2A3F6A 100%)`, padding:'90px 32px', textAlign:'center' }}>
+        <section style={{ background:`linear-gradient(135deg,${NAVY} 0%,#2A3F6A 100%)`, padding:'90px 32px', textAlign:'center' }}>
           <div style={{ maxWidth:800, margin:'0 auto' }}>
             <div style={{ display:'inline-block', background:GOLD_BG, color:GOLD_TX, fontSize:11, fontWeight:600, padding:'5px 14px', borderRadius:20, marginBottom:18, letterSpacing:'.06em' }}>
               자동차 영업사원 전용 CRM
             </div>
-            <h1 className="hero-title" style={{ fontWeight:700, color:WHITE, lineHeight:1.2, marginBottom:16 }}>
+            <h1 style={{ fontWeight:700, color:WHITE, lineHeight:1.2, marginBottom:16 }}>
               고객을 절대<br />놓치지 마세요
             </h1>
-            <p className="hero-sub" style={{ color:'#8A9EBF', lineHeight:1.7, marginBottom:28 }}>
+            <p style={{ color:'#8A9EBF', lineHeight:1.7, marginBottom:28 }}>
               차량 인도일 하나만 입력하면<br />감사문자부터 3년 점검 안내까지 자동으로
             </p>
             <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' as const }}>
-              <button className="hero-btn" onClick={()=>router.push('/login')} style={{ padding:'13px 30px', borderRadius:6, fontSize:15, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>
+              <button onClick={()=>router.push('/login')} style={{ padding:'13px 30px', borderRadius:6, fontSize:15, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>
                 30일 무료 체험 시작
               </button>
-              <a className="hero-btn" href="#기능" style={{ padding:'13px 30px', borderRadius:6, fontSize:15, fontWeight:500, border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0', textDecoration:'none', display:'inline-block' }}>
+              <a href="#기능" style={{ padding:'13px 30px', borderRadius:6, fontSize:15, fontWeight:500, border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0', textDecoration:'none', display:'inline-block' }}>
                 기능 보기 ↓
               </a>
             </div>
@@ -87,8 +87,8 @@ export default function LandingPage() {
         </section>
 
         {/* 숫자 */}
-        <section className="stats-pad" style={{ background:CREAM, padding:'52px 32px', borderBottom:`1px solid ${BORDER}` }}>
-          <div className="stats-grid" style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:16, textAlign:'center' as const }}>
+        <section style={{ background:CREAM, padding:'52px 32px', borderBottom:`1px solid ${BORDER}` }}>
+          <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:32, textAlign:'center' as const }}>
             {[
               { num:'평균 +2.3건', label:'월 계약 증가' },
               { num:'0원', label:'놓친 고객 비용' },
@@ -104,19 +104,19 @@ export default function LandingPage() {
         </section>
 
         {/* 기능 */}
-        <section className="section-pad" id="기능" style={{ padding:'72px 32px', background:WHITE }}>
+        <section id="기능" style={{ padding:'72px 32px', background:WHITE }}>
           <div style={{ maxWidth:1100, margin:'0 auto' }}>
             <div style={{ textAlign:'center' as const, marginBottom:40 }}>
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Features</div>
-              <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>영업에 필요한 모든 것</h2>
+              <h2 style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>영업에 필요한 모든 것</h2>
               <p style={{ fontSize:15, color:TX2 }}>복잡한 설정 없이 바로 사용할 수 있어요</p>
             </div>
-            <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
               {features.map((f,i)=>(
-                <div className="feature-card" key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:8, padding:'24px 20px', borderTop:`3px solid ${f.color}` }}>
+                <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:8, padding:'24px 20px', borderTop:`3px solid ${f.color}` }}>
                   <div style={{ fontSize:28, marginBottom:10 }}>{f.icon}</div>
-                  <div className="feature-title" style={{ fontSize:15, fontWeight:600, color:TX1, marginBottom:6 }}>{f.title}</div>
-                  <div className="feature-desc" style={{ fontSize:13, color:TX2, lineHeight:1.6 }}>{f.desc}</div>
+                  <div style={{ fontSize:15, fontWeight:600, color:TX1, marginBottom:6 }}>{f.title}</div>
+                  <div style={{ fontSize:13, color:TX2, lineHeight:1.6 }}>{f.desc}</div>
                 </div>
               ))}
             </div>
@@ -124,12 +124,12 @@ export default function LandingPage() {
         </section>
 
         {/* 자동화 흐름 */}
-        <section className="section-pad" style={{ padding:'72px 32px', background:NAVY }}>
+        <section style={{ padding:'72px 32px', background:NAVY }}>
           <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' as const }}>
             <div style={{ fontSize:11, color:GOLD, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Automation</div>
-            <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />모든 게 자동으로</h2>
+            <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />모든 게 자동으로</h2>
             <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:40 }}>차량 인도일만 입력하면 이후 모든 연락이 자동 예약됩니다</p>
-            <div className="auto-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))', gap:12, alignItems:'center' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, alignItems:'center' }}>
               {[
                 { day:'인도일', label:'차량 인도', color:GOLD },
                 { day:'+3일', label:'감사 문자', color:'#1D9E75' },
@@ -148,21 +148,21 @@ export default function LandingPage() {
         </section>
 
         {/* 가격 */}
-        <section className="section-pad" id="가격" style={{ padding:'72px 32px', background:CREAM }}>
+        <section id="가격" style={{ padding:'72px 32px', background:CREAM }}>
           <div style={{ maxWidth:800, margin:'0 auto' }}>
             <div style={{ textAlign:'center' as const, marginBottom:40 }}>
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Pricing</div>
-              <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>합리적인 가격</h2>
+              <h2 style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>합리적인 가격</h2>
               <p style={{ fontSize:15, color:TX2 }}>커피 두 잔 가격으로 고객 관리를 자동화하세요</p>
             </div>
-            <div className="plans-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
               {plans.map((plan,i)=>(
                 <div key={i} style={{ background:plan.highlight?NAVY:WHITE, border:`1px solid ${plan.highlight?NAVY:BORDER}`, borderRadius:10, padding:'28px 24px', position:'relative' as const }}>
                   {plan.highlight&&(
                     <div style={{ position:'absolute' as const, top:-12, left:'50%', transform:'translateX(-50%)', background:GOLD, color:WHITE, fontSize:11, fontWeight:700, padding:'4px 16px', borderRadius:20, whiteSpace:'nowrap' as const }}>가장 인기</div>
                   )}
                   <div style={{ fontSize:11, fontWeight:600, color:plan.highlight?'#8A9EBF':TX3, letterSpacing:'.06em', textTransform:'uppercase' as const, marginBottom:6 }}>{plan.name}</div>
-                  <div className="plan-price" style={{ fontSize:26, fontWeight:700, color:plan.highlight?WHITE:TX1, marginBottom:6 }}>{plan.price}</div>
+                  <div style={{ fontSize:26, fontWeight:700, color:plan.highlight?WHITE:TX1, marginBottom:6 }}>{plan.price}</div>
                   <div style={{ fontSize:13, color:plan.highlight?'#6A7E9E':TX3, marginBottom:18, lineHeight:1.5 }}>{plan.desc}</div>
                   <div style={{ borderTop:`1px solid ${plan.highlight?NAVY2:BORDER}`, paddingTop:14, marginBottom:18 }}>
                     {plan.features.map((f,j)=>(
@@ -187,13 +187,13 @@ export default function LandingPage() {
         </section>
 
         {/* 후기 */}
-        <section className="section-pad" id="후기" style={{ padding:'72px 32px', background:WHITE }}>
+        <section id="후기" style={{ padding:'72px 32px', background:WHITE }}>
           <div style={{ maxWidth:1100, margin:'0 auto' }}>
             <div style={{ textAlign:'center' as const, marginBottom:40 }}>
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Reviews</div>
-              <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:TX1 }}>실제 영업사원의 후기</h2>
+              <h2 style={{ fontSize:36, fontWeight:700, color:TX1 }}>실제 영업사원의 후기</h2>
             </div>
-            <div className="reviews-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
               {testimonials.map((t,i)=>(
                 <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:10, padding:'22px 20px' }}>
                   <div style={{ fontSize:20, color:GOLD, marginBottom:10 }}>❝</div>
@@ -209,11 +209,11 @@ export default function LandingPage() {
         </section>
 
         {/* CTA */}
-        <section className="section-pad" style={{ padding:'72px 32px', background:NAVY, textAlign:'center' as const }}>
+        <section style={{ padding:'72px 32px', background:NAVY, textAlign:'center' as const }}>
           <div style={{ maxWidth:600, margin:'0 auto' }}>
-            <h2 className="cta-title" style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:14 }}>지금 바로 시작하세요</h2>
+            <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:14 }}>지금 바로 시작하세요</h2>
             <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:28 }}>30일 동안 무료로 모든 기능을 사용해보세요.<br />신용카드 없이 바로 시작할 수 있어요.</p>
-            <button className="hero-btn" onClick={()=>router.push('/login')} style={{ padding:'14px 36px', borderRadius:6, fontSize:15, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>
+            <button onClick={()=>router.push('/login')} style={{ padding:'14px 36px', borderRadius:6, fontSize:15, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>
               30일 무료 체험 시작하기
             </button>
             <p style={{ fontSize:12, color:'#4A6080', marginTop:14 }}>신용카드 불필요 · 언제든 취소 가능</p>
