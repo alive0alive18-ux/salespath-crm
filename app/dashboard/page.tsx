@@ -713,6 +713,11 @@ function Clients({clients,setClients,onSelect}:any){
           <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,flexShrink:0}}>{cat.label}</button>
         ))}
       </div>
+      <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap' as const}}>
+        {[{key:'all',label:'전체'},{key:'delivered',label:'✅ 출고'},{key:'prospect',label:'🎯 가망'},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`}))].map(cat=>(
+          <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,flexShrink:0}}>{cat.label}</button>
+        ))}
+      </div>
       <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap' as const}}>
         <input style={{...inp,flex:1,minWidth:200}} placeholder="이름, 전화번호, 차량 검색..." value={search} onChange={e=>setSearch(e.target.value)} />
         <select style={{...inp,width:'auto'}} value={stageFilter} onChange={e=>setStageFilter(e.target.value)}>
@@ -940,8 +945,12 @@ function Calendar(){
   const supabase=createClient()
   const [currentDate,setCurrentDate]=useState(new Date())
   const [allSchedules,setAllSchedules]=useState<any[]>([])
+  const [allClients,setAllClients]=useState<any[]>([])
   const [selectedDate,setSelectedDate]=useState<string|null>(null)
   const [loading,setLoading]=useState(true)
+  const [showAddForm,setShowAddForm]=useState(false)
+  const [addForm,setAddForm]=useState({type:'memo',client_id:'',note:'',time:''})
+  const [saving,setSaving]=useState(false)
   const year=currentDate.getFullYear(),month=currentDate.getMonth()
 
   useEffect(()=>{
@@ -949,8 +958,11 @@ function Calendar(){
       setLoading(true)
       const s=new Date(year,month,1).toISOString().split('T')[0]
       const e=new Date(year,month+1,0).toISOString().split('T')[0]
-      const{data}=await supabase.from('schedules').select('*, clients(name,car_model)').gte('scheduled_date',s).lte('scheduled_date',e).order('scheduled_date')
-      setAllSchedules(data||[]);setLoading(false)
+      const[sc,cl]=await Promise.all([
+        supabase.from('schedules').select('*, clients(name,car_model)').gte('scheduled_date',s).lte('scheduled_date',e).order('scheduled_date'),
+        supabase.from('clients').select('id,name,phone').order('name')
+      ])
+      setAllSchedules(sc.data||[]);setAllClients(cl.data||[]);setLoading(false)
     }
     load()
   },[year,month])
@@ -962,6 +974,16 @@ function Calendar(){
   for(let i=1;i<=daysInMonth;i++) days.push(i)
 
   const getDateStr=(day:number)=>`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+  const handleDateClick=(dateStr:string)=>{setSelectedDate(dateStr===selectedDate?null:dateStr);setShowAddForm(false);setAddForm({type:'memo',client_id:'',note:'',time:''})}
+  const addSchedule=async()=>{
+    if(!addForm.note.trim()||!selectedDate) return;setSaving(true)
+    const ins:any={scheduled_date:selectedDate,type:'inspection',is_contacted:false,note:(addForm.time?`[${addForm.time}] `:'')+( addForm.type==='client'?addForm.note:`📝 ${addForm.note}`)}
+    if(addForm.type==='client'&&addForm.client_id) ins.client_id=addForm.client_id
+    const{data}=await supabase.from('schedules').insert(ins).select('*, clients(name,car_model)')
+    if(data) setAllSchedules(p=>[...p,...data])
+    setShowAddForm(false);setAddForm({type:'memo',client_id:'',note:'',time:''});setSaving(false)
+  }
+  const delSchedule=async(id:string)=>{await supabase.from('schedules').delete().eq('id',id);setAllSchedules(p=>p.filter(s=>s.id!==id))}
   const todayStr=new Date().toISOString().split('T')[0]
   const selectedSchedules=selectedDate?allSchedules.filter(s=>s.scheduled_date===selectedDate):[]
   const weekDays=['일','월','화','수','목','금','토']
@@ -990,7 +1012,7 @@ function Calendar(){
                 const isToday=dateStr===todayStr,isSel=dateStr===selectedDate
                 const isSun=idx%7===0,isSat=idx%7===6
                 return(
-                  <div key={day} onClick={()=>setSelectedDate(dateStr===selectedDate?null:dateStr)}
+                  <div key={day} onClick={()=>handleDateClick(dateStr)}
                     style={{minHeight:80,padding:'8px 10px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSel?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',transition:'background .1s'}}>
                     <div style={{fontSize:13,fontWeight:isToday?600:400,width:24,height:24,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:isToday?GOLD:'transparent',color:isToday?WHITE:isSun?RED:isSat?BLUE:TX1,marginBottom:4}}>{day}</div>
                     <div style={{display:'flex',flexDirection:'column',gap:2}}>
@@ -1008,11 +1030,39 @@ function Calendar(){
         </div>
         <div>
           <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'sticky',top:0}}>
-            <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,fontSize:13,fontWeight:500,color:TX1}}>
-              {selectedDate?`${selectedDate.replace(/-/g,'.')} 일정`:'날짜를 선택하세요'}
+            <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,fontSize:13,fontWeight:600,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <span>{selectedDate?`${selectedDate.replace(/-/g,'.')} 일정`:'날짜를 선택하세요'}</span>
+              {selectedDate&&<button style={{...btn('navy'),padding:'5px 12px',fontSize:12}} onClick={()=>setShowAddForm(v=>!v)}>{showAddForm?'✕ 닫기':'+ 추가'}</button>}
             </div>
+            {showAddForm&&selectedDate&&(
+              <div style={{padding:'16px 18px',borderBottom:`1px solid ${BORDER2}`,background:CREAM}}>
+                <div style={{display:'flex',gap:8,marginBottom:12}}>
+                  {[{v:'memo',l:'📝 개인 메모'},{v:'client',l:'👤 고객 연결'}].map(t=>(
+                    <button key={t.v} onClick={()=>setAddForm(p=>({...p,type:t.v,client_id:''}))} style={{flex:1,padding:'8px',borderRadius:4,fontSize:12,cursor:'pointer',fontWeight:addForm.type===t.v?600:400,background:addForm.type===t.v?NAVY:WHITE,color:addForm.type===t.v?WHITE:TX2,border:`1px solid ${addForm.type===t.v?NAVY:BORDER}`}}>{t.l}</button>
+                  ))}
+                </div>
+                {addForm.type==='client'&&(
+                  <div style={{marginBottom:10}}>
+                    <label style={lbl}>고객 선택</label>
+                    <select style={inp} value={addForm.client_id} onChange={e=>setAddForm(p=>({...p,client_id:e.target.value}))}>
+                      <option value="">고객 선택...</option>
+                      {allClients.map((c:any)=><option key={c.id} value={c.id}>{c.name} {c.phone?`(${c.phone})`:''}</option>)}
+                    </select>
+                  </div>
+                )}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+                  <div><label style={lbl}>시간 (선택)</label><input style={inp} type="time" value={addForm.time} onChange={e=>setAddForm(p=>({...p,time:e.target.value}))} /></div>
+                  <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}><span style={{fontSize:12,color:TX3}}>{selectedDate}</span></div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <label style={lbl}>내용 *</label>
+                  <textarea style={{...inp,height:72,resize:'none' as const,fontSize:14}} placeholder={addForm.type==='memo'?'메모 내용...':'팔로업, 미팅 내용...'} value={addForm.note} onChange={e=>setAddForm(p=>({...p,note:e.target.value}))} />
+                </div>
+                <button style={{...btn('navy'),width:'100%',padding:'10px'}} onClick={addSchedule} disabled={saving}>{saving?'저장중...':'저장'}</button>
+              </div>
+            )}
             {!selectedDate&&<div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>달력에서 날짜를 클릭하면<br/>그날 일정이 표시돼요</div>}
-            {selectedDate&&selectedSchedules.length===0&&<div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>이날 일정이 없어요 😊</div>}
+            {selectedDate&&selectedSchedules.length===0&&!showAddForm&&<div style={{padding:'28px',textAlign:'center',color:TX3,fontSize:13}}><div style={{fontSize:22,marginBottom:8}}>📅</div>이날 일정이 없어요<br/><span style={{fontSize:12,color:GOLD,cursor:'pointer'}} onClick={()=>setShowAddForm(true)}>+ 일정 추가하기</span></div>}
             {selectedSchedules.map((sc:any,i:number)=>{
               const lb=getLabel(sc.note)
               return(
@@ -1025,7 +1075,10 @@ function Calendar(){
                     </div>
                     <span style={badge(lb.color,lb.bg,lb.bd)}>{lb.label}</span>
                   </div>
-                  {sc.note&&<div style={{fontSize:12,color:TX2,paddingLeft:42}}>{sc.note}</div>}
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                    {sc.note&&<div style={{fontSize:12,color:TX2,paddingLeft:42,flex:1}}>{sc.note.replace(/^\[.+?\]\s*/,'').replace(/^📝\s*/,'')}</div>}
+                    <button style={{fontSize:11,color:TX3,background:'transparent',border:'none',cursor:'pointer',padding:'0 4px',flexShrink:0}} onClick={()=>delSchedule(sc.id)}>✕</button>
+                  </div>
                 </div>
               )
             })}
