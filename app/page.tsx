@@ -128,7 +128,7 @@ export default function LandingPage() {
 
         {/* 숫자 */}
         <section className="stats-pad" style={{ background:CREAM, padding:'52px 32px', borderBottom:`1px solid ${BORDER}` }}>
-          <div className="stats-grid" style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:32, textAlign:'center' as const }}>
+          <div className="stats-grid" style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:16, textAlign:'center' as const }}>
             {[
               { num:'평균 +2.3건', label:'월 계약 증가' },
               { num:'0원', label:'놓친 고객 비용' },
@@ -151,7 +151,7 @@ export default function LandingPage() {
               <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>영업에 필요한 모든 것</h2>
               <p style={{ fontSize:15, color:TX2 }}>복잡한 설정 없이 바로 사용할 수 있어요</p>
             </div>
-            <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+            <div className="features-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
               {features.map((f,i)=>(
                 <div className="feature-card" key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:8, padding:'24px 20px', borderTop:`3px solid ${f.color}` }}>
                   <div style={{ fontSize:28, marginBottom:10 }}>{f.icon}</div>
@@ -169,7 +169,7 @@ export default function LandingPage() {
             <div style={{ fontSize:11, color:GOLD, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Automation</div>
             <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />모든 게 자동으로</h2>
             <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:40 }}>차량 인도일만 입력하면 이후 모든 연락이 자동 예약됩니다</p>
-            <div className="auto-grid" style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:8, alignItems:'center' }}>
+            <div className="auto-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(120px,1fr))', gap:12, alignItems:'center' }}>
               {[
                 { day:'인도일', label:'차량 인도', color:GOLD },
                 { day:'+3일', label:'감사 문자', color:'#1D9E75' },
@@ -195,7 +195,7 @@ export default function LandingPage() {
               <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>합리적인 가격</h2>
               <p style={{ fontSize:15, color:TX2 }}>커피 두 잔 가격으로 고객 관리를 자동화하세요</p>
             </div>
-            <div className="plans-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+            <div className="plans-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
               {plans.map((plan,i)=>(
                 <div key={i} style={{ background:plan.highlight?NAVY:WHITE, border:`1px solid ${plan.highlight?NAVY:BORDER}`, borderRadius:10, padding:'28px 24px', position:'relative' as const }}>
                   {plan.highlight&&(
@@ -233,7 +233,7 @@ export default function LandingPage() {
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Reviews</div>
               <h2 className="section-title" style={{ fontSize:36, fontWeight:700, color:TX1 }}>실제 영업사원의 후기</h2>
             </div>
-            <div className="reviews-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16 }}>
+            <div className="reviews-grid" style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))', gap:12 }}>
               {testimonials.map((t,i)=>(
                 <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:10, padding:'22px 20px' }}>
                   <div style={{ fontSize:20, color:GOLD, marginBottom:10 }}>❝</div>
