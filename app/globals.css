@@ -24,3 +24,27 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 랜딩페이지 모바일 최적화 */
+@media (max-width: 767px) {
+  .nav-links { display: none !important; }
+  .nav-login { display: none !important; }
+  .hero-title { font-size: 32px !important; }
+  .hero-sub { font-size: 15px !important; }
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .features-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .auto-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+  .plans-grid { grid-template-columns: 1fr !important; }
+  .reviews-grid { grid-template-columns: 1fr !important; }
+  .feature-card { padding: 16px 14px !important; }
+  .feature-title { font-size: 13px !important; }
+  .feature-desc { font-size: 12px !important; }
+  .section-title { font-size: 26px !important; }
+  .section-pad { padding: 40px 16px !important; }
+  .hero-pad { padding: 56px 20px !important; }
+  .stats-pad { padding: 28px 16px !important; }
+  .nav-pad { padding: 0 16px !important; }
+  .hero-btn { padding: 12px 24px !important; font-size: 14px !important; }
+  .cta-title { font-size: 24px !important; }
+  .plan-price { font-size: 24px !important; }
+}
