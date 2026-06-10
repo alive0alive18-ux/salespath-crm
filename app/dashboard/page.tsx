@@ -940,7 +940,7 @@ function Calendar(){
     <div>
       <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>캘린더</div>
       <div style={{fontSize:13,color:TX3,marginBottom:26}}>월별 연락 일정 한눈에 보기</div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:20}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr',gap:16}}>
         <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 24px',borderBottom:`1px solid ${BORDER}`}}>
             <button onClick={()=>setCurrentDate(new Date(year,month-1,1))} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:3,padding:'6px 14px',fontSize:13,cursor:'pointer',color:TX2}}>‹</button>
