@@ -708,6 +708,11 @@ function Clients({clients,setClients,onSelect}:any){
           </button>
         ))}
       </div>
+      <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap' as const}}>
+        {[{key:'all',label:'전체'},{key:'delivered',label:'✅ 출고'},{key:'prospect',label:'🎯 가망'},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`}))].map(cat=>(
+          <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,flexShrink:0}}>{cat.label}</button>
+        ))}
+      </div>
       <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap' as const}}>
         <input style={{...inp,flex:1,minWidth:200}} placeholder="이름, 전화번호, 차량 검색..." value={search} onChange={e=>setSearch(e.target.value)} />
         <select style={{...inp,width:'auto'}} value={stageFilter} onChange={e=>setStageFilter(e.target.value)}>
