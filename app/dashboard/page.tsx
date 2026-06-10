@@ -274,6 +274,7 @@ export default function Home() {
     {id:'clients',label:'고객 관리'},
     {id:'referrals',label:'리퍼럴'},
     {id:'partners',label:'제휴업체'},
+    {id:'calendar',label:'캘린더'},
   ]
 
   if(loading) return <div style={{minHeight:'100vh',background:CREAM,display:'flex',alignItems:'center',justifyContent:'center',color:NAVY,fontSize:14,letterSpacing:'.06em'}}>Loading...</div>
@@ -311,6 +312,7 @@ export default function Home() {
         {page==='clients'&&<Clients clients={clients} setClients={setClients} onSelect={setSelectedClient} />}
         {page==='referrals'&&<Referrals referrals={referrals} />}
         {page==='partners'&&<Partners partners={partners} setPartners={setPartners} />}
+        {page==='calendar'&&<Calendar />}
       </main>
     </div>
   )
@@ -628,6 +630,200 @@ function Partners({partners,setPartners}:any) {
             <div style={{fontSize:13,color:TX2}}>🎁 {p.reward_description||'—'}</div>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function Calendar() {
+  const supabase = createClient()
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [allSchedules, setAllSchedules] = useState<any[]>([])
+  const [selectedDate, setSelectedDate] = useState<string|null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth()
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true)
+      const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0]
+      const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0]
+      const { data } = await supabase
+        .from('schedules')
+        .select('*, clients(name, car_model)')
+        .gte('scheduled_date', startOfMonth)
+        .lte('scheduled_date', endOfMonth)
+        .order('scheduled_date')
+      setAllSchedules(data || [])
+      setLoading(false)
+    }
+    load()
+  }, [year, month])
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
+
+  // 달력 날짜 배열 생성
+  const firstDay = new Date(year, month, 1).getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const days: (number | null)[] = []
+  for (let i = 0; i < firstDay; i++) days.push(null)
+  for (let i = 1; i <= daysInMonth; i++) days.push(i)
+
+  const getDateStr = (day: number) => `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+  const getSchedulesForDay = (day: number) => allSchedules.filter(s => s.scheduled_date === getDateStr(day))
+  const todayStr = new Date().toISOString().split('T')[0]
+
+  const selectedSchedules = selectedDate ? allSchedules.filter(s => s.scheduled_date === selectedDate) : []
+  const weekDays = ['일','월','화','수','목','금','토']
+  const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']
+
+  return (
+    <div>
+      <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>캘린더</div>
+      <div style={{fontSize:13,color:TX3,marginBottom:26}}>월별 연락 일정 한눈에 보기</div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:20}}>
+        {/* 캘린더 */}
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden'}}>
+          {/* 헤더 */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 24px',borderBottom:`1px solid ${BORDER}`}}>
+            <button onClick={prevMonth} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:3,padding:'6px 14px',fontSize:13,cursor:'pointer',color:TX2}}>‹</button>
+            <div style={{fontSize:16,fontWeight:500,color:TX1,letterSpacing:'-.01em'}}>
+              {year}년 {monthNames[month]}
+            </div>
+            <button onClick={nextMonth} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:3,padding:'6px 14px',fontSize:13,cursor:'pointer',color:TX2}}>›</button>
+          </div>
+
+          {/* 요일 헤더 */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',background:CREAM2}}>
+            {weekDays.map((d,i) => (
+              <div key={d} style={{padding:'10px 0',textAlign:'center',fontSize:11,fontWeight:500,color:i===0?'#DC2626':i===6?'#1D4ED8':TX3,letterSpacing:'.04em'}}>{d}</div>
+            ))}
+          </div>
+
+          {/* 날짜 그리드 */}
+          {loading ? (
+            <div style={{padding:'48px',textAlign:'center',color:TX3,fontSize:14}}>불러오는 중...</div>
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)'}}>
+              {days.map((day, idx) => {
+                if (!day) return <div key={`empty-${idx}`} style={{minHeight:80,borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`}} />
+                const dateStr = getDateStr(day)
+                const daySchedules = getSchedulesForDay(day)
+                const isToday = dateStr === todayStr
+                const isSelected = dateStr === selectedDate
+                const isWeekend = (idx % 7 === 0)
+                const isSat = (idx % 7 === 6)
+                return (
+                  <div key={day}
+                    onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
+                    style={{
+                      minHeight:80, padding:'8px 10px',
+                      borderRight:`1px solid ${BORDER2}`,
+                      borderBottom:`1px solid ${BORDER2}`,
+                      background: isSelected ? '#EEF2FF' : isToday ? GOLD_BG : WHITE,
+                      cursor:'pointer',
+                      transition:'background .1s'
+                    }}
+                  >
+                    <div style={{
+                      fontSize:13, fontWeight: isToday ? 600 : 400,
+                      color: isToday ? GOLD_TX : isWeekend ? '#DC2626' : isSat ? '#1D4ED8' : TX1,
+                      marginBottom:4,
+                      width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center',
+                      borderRadius:'50%',
+                      background: isToday ? GOLD : 'transparent',
+                      color: isToday ? WHITE : isWeekend ? '#DC2626' : isSat ? '#1D4ED8' : TX1,
+                    }}>{day}</div>
+                    <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                      {daySchedules.slice(0,3).map((sc:any) => {
+                        const lb = getLabel(sc.note)
+                        return (
+                          <div key={sc.id} style={{
+                            fontSize:10, padding:'2px 5px', borderRadius:2,
+                            background:lb.bg, color:lb.color,
+                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'
+                          }}>
+                            {sc.clients?.name} {lb.label}
+                          </div>
+                        )
+                      })}
+                      {daySchedules.length > 3 && (
+                        <div style={{fontSize:10,color:TX3}}>+{daySchedules.length-3}건</div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 선택한 날 일정 */}
+        <div>
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'sticky',top:0}}>
+            <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,fontSize:13,fontWeight:500,color:TX1}}>
+              {selectedDate ? `${selectedDate.replace(/-/g,'.')} 일정` : '날짜를 선택하세요'}
+            </div>
+            {!selectedDate && (
+              <div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>
+                달력에서 날짜를 클릭하면<br/>그날 일정이 표시돼요
+              </div>
+            )}
+            {selectedDate && selectedSchedules.length === 0 && (
+              <div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>
+                이날 일정이 없어요 😊
+              </div>
+            )}
+            {selectedSchedules.map((sc:any, i:number) => {
+              const lb = getLabel(sc.note)
+              return (
+                <div key={sc.id} style={{padding:'14px 20px',borderBottom:i===selectedSchedules.length-1?'none':`1px solid ${BORDER2}`}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
+                    <div style={{...av(lb.color),width:32,height:32,fontSize:12}}>{sc.clients?.name?.[0]||'?'}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:500,color:TX1}}>{sc.clients?.name}</div>
+                      <div style={{fontSize:11,color:TX3}}>{sc.clients?.car_model||'차량 미등록'}</div>
+                    </div>
+                    <span style={badge(lb.color,lb.bg,lb.bd)}>{lb.label}</span>
+                  </div>
+                  {sc.note && <div style={{fontSize:12,color:TX2,paddingLeft:42}}>{sc.note}</div>}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* 이번달 요약 */}
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px',marginTop:16}}>
+            <div style={{fontSize:12,fontWeight:500,color:TX1,marginBottom:14,letterSpacing:'.02em'}}>{monthNames[month]} 일정 요약</div>
+            {[
+              {label:'감사문자', color:GREEN, bg:GREEN_BG, bd:GREEN_BD},
+              {label:'1년 점검', color:BLUE, bg:BLUE_BG, bd:BLUE_BD},
+              {label:'2년 점검', color:BLUE, bg:BLUE_BG, bd:BLUE_BD},
+              {label:'3년 점검', color:BLUE, bg:BLUE_BG, bd:BLUE_BD},
+            ].map(type => {
+              const count = allSchedules.filter(s => {
+                const lb = getLabel(s.note)
+                return lb.label === type.label
+              }).length
+              if (count === 0) return null
+              return (
+                <div key={type.label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                  <span style={badge(type.color,type.bg,type.bd)}>{type.label}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:TX1}}>{count}건</span>
+                </div>
+              )
+            })}
+            {allSchedules.length === 0 && <div style={{fontSize:13,color:TX3}}>이번달 일정이 없어요</div>}
+            <div style={{borderTop:`1px solid ${BORDER2}`,marginTop:10,paddingTop:10,display:'flex',justifyContent:'space-between'}}>
+              <span style={{fontSize:12,color:TX3}}>총 일정</span>
+              <span style={{fontSize:13,fontWeight:600,color:TX1}}>{allSchedules.length}건</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
