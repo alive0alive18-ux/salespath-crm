@@ -976,7 +976,7 @@ function Calendar(){
           )}
         </div>
         <div>
-          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'sticky',top:0}}>
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'relative',top:0}}>
             <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,fontSize:13,fontWeight:500,color:TX1}}>
               {selectedDate?`${selectedDate.replace(/-/g,'.')} 일정`:'날짜를 선택하세요'}
             </div>
@@ -1304,7 +1304,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {showQuickAdd&&<MobileQuickAdd clients={clients} setClients={setClients} onClose={()=>setShowQuickAdd(false)} />}
 
       {/* 상단 헤더 */}
-      <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
+      <div style={{background:NAVY,padding:'16px 20px 12px',position:'relative',top:0,zIndex:50}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div>
             <div style={{fontSize:10,color:NAVY3,letterSpacing:'.2em',textTransform:'uppercase' as const}}>Sales CRM</div>
