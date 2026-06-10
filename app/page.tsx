@@ -111,7 +111,7 @@ export default function LandingPage() {
               <h2 style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>영업에 필요한 모든 것</h2>
               <p style={{ fontSize:15, color:TX2 }}>복잡한 설정 없이 바로 사용할 수 있어요</p>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
               {features.map((f,i)=>(
                 <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:8, padding:'24px 20px', borderTop:`3px solid ${f.color}` }}>
                   <div style={{ fontSize:28, marginBottom:10 }}>{f.icon}</div>
@@ -193,7 +193,7 @@ export default function LandingPage() {
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Reviews</div>
               <h2 style={{ fontSize:36, fontWeight:700, color:TX1 }}>실제 영업사원의 후기</h2>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
               {testimonials.map((t,i)=>(
                 <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:10, padding:'22px 20px' }}>
                   <div style={{ fontSize:20, color:GOLD, marginBottom:10 }}>❝</div>
