@@ -1,5 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 const NAVY='#1B2A4A',NAVY2='#243758',CREAM='#F8F5F0',WHITE='#FFFFFF'
 const GOLD='#C9A84C',GOLD_BG='#FBF6E8',GOLD_TX='#8B6914'
@@ -8,6 +9,16 @@ const GREEN='#2D6A4F',BLUE='#1D4ED8',PURPLE='#6D28D9'
 
 export default function LandingPage() {
   const router = useRouter()
+  const [isMobile, setIsMobile] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(()=>{
+    setMounted(true)
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  },[])
 
   const features = [
     { icon:'⚡', title:'당직 고객 빠른 등록', desc:'이름, 전화번호, 관심 차종으로 10초 안에 등록', color:GOLD },
@@ -56,14 +67,14 @@ export default function LandingPage() {
               ))}
             </div>
             <div style={{ display:'flex', gap:8 }}>
-              <button onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:500, cursor:'pointer', border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0' }}>로그인</button>
+              <button onClick={()=>router.push('/login')} style={{ display:mounted&&isMobile?'none':'block', padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:500, cursor:'pointer', border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0' }}>로그인</button>
               <button onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>무료 시작</button>
             </div>
           </div>
         </nav>
 
         {/* 히어로 */}
-        <section style={{ background:`linear-gradient(135deg,${NAVY} 0%,#2A3F6A 100%)`, padding:'90px 32px', textAlign:'center' }}>
+        <section style={{ background:`linear-gradient(135deg,${NAVY} 0%,#2A3F6A 100%)`, padding:mounted&&isMobile?'56px 20px':'90px 32px', textAlign:'center' }}>
           <div style={{ maxWidth:800, margin:'0 auto' }}>
             <div style={{ display:'inline-block', background:GOLD_BG, color:GOLD_TX, fontSize:11, fontWeight:600, padding:'5px 14px', borderRadius:20, marginBottom:18, letterSpacing:'.06em' }}>
               자동차 영업사원 전용 CRM
@@ -88,7 +99,7 @@ export default function LandingPage() {
 
         {/* 숫자 */}
         <section style={{ background:CREAM, padding:'52px 32px', borderBottom:`1px solid ${BORDER}` }}>
-          <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:32, textAlign:'center' as const }}>
+          <div style={{ maxWidth:1100, margin:'0 auto', display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr 1fr':'repeat(4,1fr)', gap:32, textAlign:'center' as const }}>
             {[
               { num:'평균 +2.3건', label:'월 계약 증가' },
               { num:'0원', label:'놓친 고객 비용' },
@@ -104,14 +115,14 @@ export default function LandingPage() {
         </section>
 
         {/* 기능 */}
-        <section id="기능" style={{ padding:'72px 32px', background:WHITE }}>
+        <section id="기능" style={{ padding:mounted&&isMobile?'40px 16px':'72px 32px', background:WHITE }}>
           <div style={{ maxWidth:1100, margin:'0 auto' }}>
             <div style={{ textAlign:'center' as const, marginBottom:40 }}>
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Features</div>
               <h2 style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>영업에 필요한 모든 것</h2>
               <p style={{ fontSize:15, color:TX2 }}>복잡한 설정 없이 바로 사용할 수 있어요</p>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
               {features.map((f,i)=>(
                 <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:8, padding:'24px 20px', borderTop:`3px solid ${f.color}` }}>
                   <div style={{ fontSize:28, marginBottom:10 }}>{f.icon}</div>
@@ -124,7 +135,7 @@ export default function LandingPage() {
         </section>
 
         {/* 자동화 흐름 */}
-        <section style={{ padding:'72px 32px', background:NAVY }}>
+        <section style={{ padding:mounted&&isMobile?'40px 16px':'72px 32px', background:NAVY }}>
           <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' as const }}>
             <div style={{ fontSize:11, color:GOLD, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Automation</div>
             <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />모든 게 자동으로</h2>
@@ -148,14 +159,14 @@ export default function LandingPage() {
         </section>
 
         {/* 가격 */}
-        <section id="가격" style={{ padding:'72px 32px', background:CREAM }}>
+        <section id="가격" style={{ padding:mounted&&isMobile?'40px 16px':'72px 32px', background:CREAM }}>
           <div style={{ maxWidth:800, margin:'0 auto' }}>
             <div style={{ textAlign:'center' as const, marginBottom:40 }}>
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Pricing</div>
               <h2 style={{ fontSize:36, fontWeight:700, color:TX1, marginBottom:10 }}>합리적인 가격</h2>
               <p style={{ fontSize:15, color:TX2 }}>커피 두 잔 가격으로 고객 관리를 자동화하세요</p>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr':'1fr 1fr', gap:16 }}>
               {plans.map((plan,i)=>(
                 <div key={i} style={{ background:plan.highlight?NAVY:WHITE, border:`1px solid ${plan.highlight?NAVY:BORDER}`, borderRadius:10, padding:'28px 24px', position:'relative' as const }}>
                   {plan.highlight&&(
@@ -187,13 +198,13 @@ export default function LandingPage() {
         </section>
 
         {/* 후기 */}
-        <section id="후기" style={{ padding:'72px 32px', background:WHITE }}>
+        <section id="후기" style={{ padding:mounted&&isMobile?'40px 16px':'72px 32px', background:WHITE }}>
           <div style={{ maxWidth:1100, margin:'0 auto' }}>
             <div style={{ textAlign:'center' as const, marginBottom:40 }}>
               <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Reviews</div>
               <h2 style={{ fontSize:36, fontWeight:700, color:TX1 }}>실제 영업사원의 후기</h2>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
               {testimonials.map((t,i)=>(
                 <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:10, padding:'22px 20px' }}>
                   <div style={{ fontSize:20, color:GOLD, marginBottom:10 }}>❝</div>
@@ -209,7 +220,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA */}
-        <section style={{ padding:'72px 32px', background:NAVY, textAlign:'center' as const }}>
+        <section style={{ padding:mounted&&isMobile?'40px 16px':'72px 32px', background:NAVY, textAlign:'center' as const }}>
           <div style={{ maxWidth:600, margin:'0 auto' }}>
             <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:14 }}>지금 바로 시작하세요</h2>
             <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:28 }}>30일 동안 무료로 모든 기능을 사용해보세요.<br />신용카드 없이 바로 시작할 수 있어요.</p>
