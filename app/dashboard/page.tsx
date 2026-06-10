@@ -298,8 +298,16 @@ export default function Home(){
   const [templates,setTemplates]=useState<any[]>([])
   const [loading,setLoading]=useState(true)
   const [selectedClient,setSelectedClient]=useState<any>(null)
+  const [isMobile,setIsMobile]=useState(false)
   const router=useRouter()
   const supabase=createClient()
+
+  useEffect(()=>{
+    const check=()=>setIsMobile(window.innerWidth<768)
+    check()
+    window.addEventListener('resize',check)
+    return()=>window.removeEventListener('resize',check)
+  },[])
 
   useEffect(()=>{
     const load=async()=>{
@@ -338,6 +346,8 @@ export default function Home(){
   ]
 
   if(loading) return <div style={{minHeight:'100vh',background:CREAM,display:'flex',alignItems:'center',justifyContent:'center',color:NAVY,fontSize:14}}>Loading...</div>
+
+  if(isMobile) return <MobileApp page={page} setPage={setPage} user={user} salesperson={salesperson} setSalesperson={setSalesperson} clients={clients} setClients={setClients} schedules={schedules} weekSchedules={weekSchedules} templates={templates} setTemplates={setTemplates} partners={partners} setPartners={setPartners} selectedClient={selectedClient} setSelectedClient={setSelectedClient} signOut={signOut} />
 
   return(
     <div style={{display:'flex',minHeight:'100vh',background:CREAM,fontFamily:"'DM Sans','Apple SD Gothic Neo',system-ui,sans-serif",fontSize:14}}>
@@ -1272,6 +1282,424 @@ function Profile({salesperson,setSalesperson,user}:any){
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ===================== 모바일 앱 =====================
+function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClients,schedules,weekSchedules,templates,setTemplates,partners,setPartners,selectedClient,setSelectedClient,signOut}:any){
+  const [showQuickAdd,setShowQuickAdd]=useState(false)
+
+  const tabs=[
+    {id:'dashboard',icon:'🏠',label:'홈'},
+    {id:'today',icon:'📋',label:'오늘'},
+    {id:'clients',icon:'👥',label:'고객'},
+    {id:'templates',icon:'💬',label:'템플릿'},
+    {id:'more',icon:'⋯',label:'더보기'},
+  ]
+
+  return(
+    <div style={{minHeight:'100vh',background:CREAM,fontFamily:"'Apple SD Gothic Neo',system-ui,sans-serif",paddingBottom:70}}>
+      {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients((p:any)=>p.map((c:any)=>c.id===u.id?u:c));setSelectedClient(u)}} onDelete={(id:string)=>{setClients((p:any)=>p.filter((c:any)=>c.id!==id));setSelectedClient(null)}} />}
+      {showQuickAdd&&<MobileQuickAdd clients={clients} setClients={setClients} onClose={()=>setShowQuickAdd(false)} />}
+
+      {/* 상단 헤더 */}
+      <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div>
+            <div style={{fontSize:10,color:NAVY3,letterSpacing:'.2em',textTransform:'uppercase' as const}}>Sales CRM</div>
+            <div style={{fontSize:18,fontWeight:600,color:WHITE,letterSpacing:'.02em'}}>SalesPath</div>
+          </div>
+          <div style={{textAlign:'right' as const}}>
+            <div style={{fontSize:13,color:WHITE,fontWeight:500}}>{salesperson?.name||user?.email}</div>
+            <div style={{fontSize:11,color:NAVY3}}>{salesperson?.brand||''}</div>
+          </div>
+        </div>
+        {schedules.length>0&&(
+          <div style={{marginTop:10,background:GOLD+'20',borderRadius:6,padding:'8px 12px',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <span style={{fontSize:13,color:GOLD,fontWeight:500}}>🔔 오늘 연락 {schedules.length}건</span>
+            <span style={{fontSize:12,color:GOLD,cursor:'pointer'}} onClick={()=>setPage('today')}>보기 →</span>
+          </div>
+        )}
+      </div>
+
+      {/* 메인 콘텐츠 */}
+      <div style={{padding:'16px 16px'}}>
+        {page==='dashboard'&&<MobileDashboard clients={clients} schedules={schedules} weekSchedules={weekSchedules} setPage={setPage} onSelect={setSelectedClient} salesperson={salesperson} onQuickAdd={()=>setShowQuickAdd(true)} />}
+        {page==='today'&&<MobileToday schedules={schedules} />}
+        {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} />}
+        {page==='templates'&&<MobileTemplates templates={templates} setTemplates={setTemplates} />}
+        {page==='more'&&<MobileMore salesperson={salesperson} setSalesperson={setSalesperson} user={user} partners={partners} setPartners={setPartners} signOut={signOut} setPage={setPage} />}
+      </div>
+
+      {/* 하단 탭바 */}
+      <div style={{position:'fixed',bottom:0,left:0,right:0,background:WHITE,borderTop:`1px solid ${BORDER}`,display:'flex',zIndex:100,paddingBottom:'env(safe-area-inset-bottom)'}}>
+        {tabs.map(t=>(
+          <div key={t.id} onClick={()=>setPage(t.id)} style={{flex:1,padding:'10px 0 8px',display:'flex',flexDirection:'column' as const,alignItems:'center',gap:3,cursor:'pointer',background:page===t.id?CREAM:'transparent'}}>
+            <div style={{fontSize:20}}>{t.icon}</div>
+            <div style={{fontSize:10,color:page===t.id?NAVY:TX3,fontWeight:page===t.id?600:400}}>{t.label}</div>
+            {t.id==='today'&&schedules.length>0&&<div style={{position:'absolute' as const,top:6,fontSize:9,background:RED,color:WHITE,borderRadius:8,padding:'1px 5px',fontWeight:700}}>{schedules.length}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson,onQuickAdd}:any){
+  const supabase=createClient()
+  const [goal,setGoal]=useState(5)
+  const now=new Date()
+  const contracted=clients.filter((c:any)=>c.stage==='contract'||c.stage==='delivered')
+  const todayMMDD=`${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+  const birthdayClients=clients.filter((c:any)=>c.birthday&&c.birthday.slice(5)===todayMMDD)
+
+  useEffect(()=>{
+    const load=async()=>{
+      const{data:{user}}=await supabase.auth.getUser()
+      if(!user) return
+      const{data}=await supabase.from('monthly_goals').select('goal').eq('salesperson_id',user.id).eq('year',now.getFullYear()).eq('month',now.getMonth()+1).single()
+      if(data) setGoal(data.goal)
+    }
+    load()
+  },[])
+
+  return(
+    <div>
+      {birthdayClients.length>0&&(
+        <div style={{background:'#FFF5F5',border:'1px solid #FFC0C0',borderRadius:8,padding:'12px 16px',marginBottom:14,display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:20}}>🎂</span>
+          <span style={{fontSize:13,color:'#C0392B',fontWeight:500}}>{birthdayClients.map((c:any)=>c.name).join(', ')} 오늘 생일!</span>
+        </div>
+      )}
+
+      {/* 빠른 등록 버튼 */}
+      <button onClick={onQuickAdd} style={{width:'100%',background:NAVY,color:WHITE,border:'none',borderRadius:10,padding:'14px',fontSize:15,fontWeight:600,cursor:'pointer',marginBottom:16,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+        <span style={{fontSize:18}}>⚡</span> 당직 고객 빠른 등록
+      </button>
+
+      {/* 핵심 지표 */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
+        {[
+          {l:'전체 고객',v:clients.length,c:TX1},
+          {l:'오늘 연락',v:schedules.length,c:schedules.length>0?GOLD:TX1},
+          {l:'계약·출고',v:contracted.length,c:contracted.length>0?GREEN:TX1},
+          {l:'이번달 목표',v:`${contracted.length}/${goal}`,c:TX1},
+        ].map((s,i)=>(
+          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'14px 16px'}}>
+            <div style={{fontSize:10,color:TX3,textTransform:'uppercase' as const,letterSpacing:'.06em',marginBottom:6,fontWeight:500}}>{s.l}</div>
+            <div style={{fontSize:26,fontWeight:500,color:s.c}}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 계약 단계 */}
+      <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'14px 16px',marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:500,color:TX1,marginBottom:12}}>계약 단계 현황</div>
+        <div style={{display:'flex',gap:8}}>
+          {STAGES.map(s=>{
+            const count=clients.filter((c:any)=>c.stage===s.key).length
+            return(
+              <div key={s.key} style={{flex:1,background:s.bg,border:`1px solid ${s.bd}`,borderRadius:6,padding:'10px 6px',textAlign:'center' as const}}>
+                <div style={{fontSize:18,fontWeight:500,color:s.color}}>{count}</div>
+                <div style={{fontSize:10,color:s.color,fontWeight:500,marginTop:2}}>{s.label}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 오늘 연락 리스트 */}
+      {schedules.length>0&&(
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',marginBottom:14}}>
+          <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER2}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <span style={{fontSize:13,fontWeight:500,color:TX1}}>오늘 연락 <span style={{color:GOLD}}>{schedules.length}</span></span>
+            <span style={{fontSize:12,color:GOLD}} onClick={()=>setPage('today')}>전체 →</span>
+          </div>
+          {schedules.slice(0,3).map((sc:any,i:number)=>{
+            const lb=getLabel(sc.note)
+            return(
+              <div key={sc.id} style={{display:'flex',alignItems:'center',padding:'12px 16px',gap:10,borderBottom:i===Math.min(schedules.length,3)-1?'none':`1px solid ${BORDER2}`}} onClick={()=>onSelect(sc.clients)}>
+                <div style={av(lb.color)}>{sc.clients?.name?.[0]||'?'}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:500,color:TX1}}>{sc.clients?.name}</div>
+                  <div style={{fontSize:11,color:TX3}}>{sc.note}</div>
+                </div>
+                <span style={badge(lb.color,lb.bg,lb.bd)}>{lb.label}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 최근 고객 */}
+      <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden'}}>
+        <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER2}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <span style={{fontSize:13,fontWeight:500,color:TX1}}>최근 고객</span>
+          <span style={{fontSize:12,color:GOLD}} onClick={()=>setPage('clients')}>전체 →</span>
+        </div>
+        {clients.length===0&&<div style={{padding:'24px',textAlign:'center' as const,color:TX3,fontSize:13}}>등록된 고객이 없어요</div>}
+        {clients.slice(0,5).map((c:any,i:number)=>{
+          const stg=getStage(c.stage||'first_visit')
+          return(
+            <div key={c.id} style={{display:'flex',alignItems:'center',padding:'12px 16px',gap:10,borderBottom:i===Math.min(clients.length,5)-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}} onClick={()=>onSelect(c)}>
+              <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
+                <div style={{fontSize:11,color:TX3}}>{c.phone||'—'}</div>
+              </div>
+              <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MobileQuickAdd({clients,setClients,onClose}:any){
+  const supabase=createClient()
+  const [form,setForm]=useState({name:'',phone:'',interest_model:'',budget:''})
+  const [saving,setSaving]=useState(false)
+
+  const save=async()=>{
+    if(!form.name) return;setSaving(true)
+    const{data:{user}}=await supabase.auth.getUser()
+    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,interest_model:form.interest_model||null,budget:form.budget||null,stage:'first_visit'}).select()
+    if(data) setClients((p:any)=>[data[0],...p])
+    onClose()
+  }
+
+  return(
+    <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.8)',display:'flex',alignItems:'flex-end',justifyContent:'center',zIndex:200}} onClick={onClose}>
+      <div style={{background:WHITE,borderRadius:'16px 16px 0 0',width:'100%',padding:'24px 20px 40px',boxShadow:'0 -8px 40px rgba(0,0,0,0.2)'}} onClick={e=>e.stopPropagation()}>
+        <div style={{width:40,height:4,background:BORDER,borderRadius:2,margin:'0 auto 20px'}} />
+        <div style={{fontSize:17,fontWeight:600,color:TX1,marginBottom:20}}>⚡ 당직 고객 빠른 등록</div>
+        <div style={{display:'grid',gap:14}}>
+          <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
+          <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+          <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
+          <div><label style={lbl}>예산</label><input style={{...inp,fontSize:16}} placeholder="1억 이하" value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
+          <button style={{...btn('navy'),padding:'14px',fontSize:16,borderRadius:8,marginTop:4}} onClick={save} disabled={saving}>{saving?'저장중...':'저장하기'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MobileToday({schedules}:any){
+  const supabase=createClient()
+  const [done,setDone]=useState<string[]>([])
+  const toggle=async(id:string)=>{
+    setDone(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id])
+    await supabase.from('schedules').update({is_contacted:true}).eq('id',id)
+  }
+  return(
+    <div>
+      <div style={{fontSize:20,fontWeight:600,color:TX1,marginBottom:4}}>오늘의 연락 리스트</div>
+      <div style={{fontSize:13,color:TX3,marginBottom:16}}>완료 {done.length} / {schedules.length}건</div>
+      {schedules.length===0&&<div style={{background:WHITE,borderRadius:8,padding:'40px',textAlign:'center' as const,color:TX3,fontSize:14}}>오늘 연락할 고객이 없어요 😊</div>}
+      <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden'}}>
+        {schedules.map((sc:any,i:number)=>{
+          const lb=getLabel(sc.note);const ok=done.includes(sc.id)
+          return(
+            <div key={sc.id} style={{display:'flex',alignItems:'center',padding:'14px 16px',gap:12,opacity:ok?.5:1,borderBottom:i===schedules.length-1?'none':`1px solid ${BORDER2}`}}>
+              <div style={{width:26,height:26,borderRadius:'50%',border:`2px solid ${ok?GREEN:BORDER}`,background:ok?GREEN:'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,color:WHITE,flexShrink:0}} onClick={()=>toggle(sc.id)}>{ok?'✓':''}</div>
+              <div style={av(lb.color)}>{sc.clients?.name?.[0]||'?'}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:15,fontWeight:500,color:TX1}}>{sc.clients?.name}</div>
+                <div style={{fontSize:12,color:TX3}}>{sc.clients?.car_model} · {sc.note}</div>
+              </div>
+              <span style={badge(lb.color,lb.bg,lb.bd)}>{lb.label}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MobileClients({clients,setClients,onSelect}:any){
+  const supabase=createClient()
+  const [search,setSearch]=useState('')
+  const [showAdd,setShowAdd]=useState(false)
+  const [form,setForm]=useState({name:'',phone:'',interest_model:'',budget:'',stage:'first_visit'})
+  const [saving,setSaving]=useState(false)
+
+  const filtered=clients.filter((c:any)=>c.name?.includes(search)||c.phone?.includes(search)||c.interest_model?.includes(search))
+
+  const save=async()=>{
+    if(!form.name) return;setSaving(true)
+    const{data:{user}}=await supabase.auth.getUser()
+    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,interest_model:form.interest_model||null,budget:form.budget||null,stage:form.stage}).select()
+    if(data) setClients((p:any)=>[data[0],...p])
+    setForm({name:'',phone:'',interest_model:'',budget:'',stage:'first_visit'});setShowAdd(false);setSaving(false)
+  }
+
+  return(
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+        <div style={{fontSize:20,fontWeight:600,color:TX1}}>고객 관리 <span style={{fontSize:14,color:TX3,fontWeight:400}}>{clients.length}명</span></div>
+        <button style={{...btn('navy'),padding:'8px 16px',borderRadius:8}} onClick={()=>setShowAdd(v=>!v)}>{showAdd?'✕':'+ 등록'}</button>
+      </div>
+
+      {showAdd&&(
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:16,marginBottom:14}}>
+          <div style={{display:'grid',gap:12}}>
+            <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
+            <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
+            <div><label style={lbl}>예산</label><input style={{...inp,fontSize:16}} value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
+            <div>
+              <label style={lbl}>단계</label>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap' as const}}>
+                {STAGES.map(s=><button key={s.key} onClick={()=>setForm(p=>({...p,stage:s.key}))} style={{padding:'6px 10px',borderRadius:6,fontSize:12,cursor:'pointer',border:`1px solid ${form.stage===s.key?s.color:BORDER}`,background:form.stage===s.key?s.bg:WHITE,color:form.stage===s.key?s.color:TX3,fontWeight:form.stage===s.key?600:400}}>{s.label}</button>)}
+              </div>
+            </div>
+            <button style={{...btn('navy'),padding:'12px',fontSize:15,borderRadius:8}} onClick={save} disabled={saving}>{saving?'저장중...':'저장'}</button>
+          </div>
+        </div>
+      )}
+
+      <input style={{...inp,fontSize:16,marginBottom:12,borderRadius:8}} placeholder="이름, 전화번호 검색..." value={search} onChange={e=>setSearch(e.target.value)} />
+
+      <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden'}}>
+        {filtered.length===0&&<div style={{padding:'32px',textAlign:'center' as const,color:TX3,fontSize:14}}>고객이 없어요</div>}
+        {filtered.map((c:any,i:number)=>{
+          const stg=getStage(c.stage||'first_visit')
+          return(
+            <div key={c.id} style={{display:'flex',alignItems:'center',padding:'14px 16px',gap:12,borderBottom:i===filtered.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}} onClick={()=>onSelect(c)}>
+              <div style={{...av(NAVY),position:'relative'}}>
+                {c.name?.[0]||'?'}
+                {c.is_vip&&<div style={{position:'absolute' as const,top:-3,right:-3,fontSize:9}}>⭐</div>}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:15,fontWeight:500,color:TX1}}>{c.name}</div>
+                <div style={{fontSize:12,color:TX3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
+              </div>
+              <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MobileTemplates({templates,setTemplates}:any){
+  const supabase=createClient()
+  const [copied,setCopied]=useState<string|null>(null)
+  const [showAdd,setShowAdd]=useState(false)
+  const [form,setForm]=useState({title:'',content:'',category:'general'})
+  const [saving,setSaving]=useState(false)
+
+  const copy=async(text:string,id:string)=>{
+    await navigator.clipboard.writeText(text)
+    setCopied(id);setTimeout(()=>setCopied(null),2000)
+  }
+  const del=async(id:string)=>{
+    await supabase.from('templates').delete().eq('id',id)
+    setTemplates((p:any)=>p.filter((t:any)=>t.id!==id))
+  }
+  const save=async()=>{
+    if(!form.title||!form.content) return;setSaving(true)
+    const{data:{user}}=await supabase.auth.getUser()
+    const{data}=await supabase.from('templates').insert({...form,salesperson_id:user?.id}).select()
+    if(data) setTemplates((p:any)=>[data[0],...p])
+    setForm({title:'',content:'',category:'general'});setShowAdd(false);setSaving(false)
+  }
+
+  return(
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+        <div style={{fontSize:20,fontWeight:600,color:TX1}}>문자 템플릿</div>
+        <button style={{...btn('navy'),padding:'8px 16px',borderRadius:8}} onClick={()=>setShowAdd(v=>!v)}>{showAdd?'✕':'+ 추가'}</button>
+      </div>
+
+      {showAdd&&(
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:16,marginBottom:14}}>
+          <div style={{display:'grid',gap:12}}>
+            <div><label style={lbl}>제목</label><input style={{...inp,fontSize:16}} value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} /></div>
+            <div><label style={lbl}>내용</label><textarea style={{...inp,height:100,resize:'none' as const,fontSize:15}} value={form.content} onChange={e=>setForm(p=>({...p,content:e.target.value}))} /></div>
+            <button style={{...btn('navy'),padding:'12px',fontSize:15,borderRadius:8}} onClick={save} disabled={saving}>{saving?'저장중...':'저장'}</button>
+          </div>
+        </div>
+      )}
+
+      {templates.length===0&&<div style={{background:WHITE,borderRadius:8,padding:'32px',textAlign:'center' as const,color:TX3,fontSize:14}}>템플릿이 없어요. 추가해보세요!</div>}
+      <div style={{display:'grid',gap:10}}>
+        {templates.map((t:any)=>(
+          <div key={t.id} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'14px 16px'}}>
+            <div style={{fontSize:15,fontWeight:500,color:TX1,marginBottom:8}}>{t.title}</div>
+            <div style={{fontSize:13,color:TX2,lineHeight:1.7,background:CREAM,borderRadius:6,padding:'10px 12px',marginBottom:10,whiteSpace:'pre-wrap' as const}}>{t.content}</div>
+            <div style={{display:'flex',gap:8}}>
+              <button style={{flex:1,...btn('navy'),background:copied===t.id?GREEN:NAVY,borderRadius:8,padding:'10px'}} onClick={()=>copy(t.content,t.id)}>{copied===t.id?'✓ 복사됨':'📋 복사'}</button>
+              <button style={{...btn(),color:RED,borderColor:RED+'40',borderRadius:8,padding:'10px'}} onClick={()=>del(t.id)}>삭제</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOut,setPage}:any){
+  const supabase=createClient()
+  const [section,setSection]=useState<string|null>(null)
+  const [form,setForm]=useState({name:salesperson?.name||'',phone:salesperson?.phone||'',brand:salesperson?.brand||'',dealer_name:salesperson?.dealer_name||''})
+  const [saved,setSaved]=useState(false)
+  const BRANDS=['현대','기아','제네시스','쌍용(KG모빌리티)','르노코리아','GM 한국사업장','메르세데스-벤츠','BMW','아우디','폭스바겐','포르쉐','볼보','랜드로버','Jeep','푸조','시트로엥','미니(MINI)','렉서스','도요타','혼다','닛산','인피니티','캐딜락','링컨','포드','테슬라','기타']
+
+  const saveProfile=async()=>{
+    const{data:{user:u}}=await supabase.auth.getUser()
+    const{data}=await supabase.from('salespersons').update({name:form.name,phone:form.phone||null,brand:form.brand,dealer_name:form.dealer_name||null}).eq('id',u?.id).select()
+    if(data) setSalesperson(data[0])
+    setSaved(true);setTimeout(()=>setSaved(false),2000)
+  }
+
+  const menus=[
+    {id:'profile',icon:'👤',label:'프로필 설정'},
+    {id:'calendar',icon:'📅',label:'캘린더'},
+    {id:'report',icon:'📊',label:'실적 리포트'},
+    {id:'partners',icon:'🤝',label:'제휴업체'},
+  ]
+
+  if(section==='profile') return(
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
+        <button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setSection(null)}>← 뒤로</button>
+        <div style={{fontSize:18,fontWeight:600,color:TX1}}>프로필 설정</div>
+      </div>
+      <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,padding:16,display:'grid',gap:12}}>
+        <div><label style={lbl}>이름</label><input style={{...inp,fontSize:16}} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
+        <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+        <div><label style={lbl}>브랜드</label>
+          <select style={{...inp,fontSize:16}} value={form.brand} onChange={e=>setForm(p=>({...p,brand:e.target.value}))}>
+            <option value="">선택</option>
+            {BRANDS.map(b=><option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div><label style={lbl}>전시장명</label><input style={{...inp,fontSize:16}} value={form.dealer_name} onChange={e=>setForm(p=>({...p,dealer_name:e.target.value}))} /></div>
+        <div style={{fontSize:13,color:TX3,padding:'10px',background:CREAM,borderRadius:6}}>📧 {user?.email}</div>
+        <button style={{...btn('navy'),padding:'12px',fontSize:15,borderRadius:8}} onClick={saveProfile}>{saved?'✓ 저장됐어요!':'저장'}</button>
+      </div>
+    </div>
+  )
+
+  return(
+    <div>
+      <div style={{fontSize:20,fontWeight:600,color:TX1,marginBottom:16}}>더보기</div>
+      <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
+        {menus.map((m,i)=>(
+          <div key={m.id} style={{display:'flex',alignItems:'center',padding:'16px',gap:14,borderBottom:i===menus.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}}
+            onClick={()=>m.id==='calendar'||m.id==='report'?setPage(m.id):setSection(m.id)}>
+            <span style={{fontSize:22}}>{m.icon}</span>
+            <span style={{fontSize:15,color:TX1,fontWeight:500}}>{m.label}</span>
+            <span style={{marginLeft:'auto',color:TX3,fontSize:16}}>›</span>
+          </div>
+        ))}
+      </div>
+      <button style={{width:'100%',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,padding:'14px',fontSize:15,color:RED,cursor:'pointer',fontWeight:500}} onClick={signOut}>로그아웃</button>
     </div>
   )
 }
