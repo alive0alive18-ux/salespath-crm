@@ -46,7 +46,7 @@ function getLabel(note:string){
   return {label:'연락',color:GOLD_TX,bg:GOLD_BG,bd:GOLD+'60'}
 }
 
-function ClientDetail({client,onClose,onUpdate}:any){
+function ClientDetail({client,allClients=[],onClose,onUpdate}:any){
   const supabase=createClient()
   const [tab,setTab]=useState<'info'|'vehicle'|'history'|'estimates'>('info')
   const [editing,setEditing]=useState(false)
@@ -65,7 +65,7 @@ function ClientDetail({client,onClose,onUpdate}:any){
     car_number:client.car_number||'',consultation_date:client.consultation_date||'',
     stage:client.stage||'first_visit',interest_model:client.interest_model||'',
     budget:client.budget||'',competitor:client.competitor||'',birthday:client.birthday||'',
-    is_vip:client.is_vip||false,
+    is_vip:client.is_vip||false,referred_by:client.referred_by||'',
   })
 
   useEffect(()=>{
@@ -88,7 +88,7 @@ function ClientDetail({client,onClose,onUpdate}:any){
 
   const save=async()=>{
     setSaving(true)
-    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,budget:form.budget||null,competitor:form.competitor||null,is_vip:form.is_vip}
+    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,budget:form.budget||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
     if(form.delivery_date) u.delivery_date=form.delivery_date
     if(form.consultation_date) u.consultation_date=form.consultation_date
     if(form.birthday) u.birthday=form.birthday
@@ -150,12 +150,21 @@ function ClientDetail({client,onClose,onUpdate}:any){
                   <input type="checkbox" id="vip" checked={form.is_vip} onChange={e=>setForm(p=>({...p,is_vip:e.target.checked}))} />
                   <label htmlFor="vip" style={{fontSize:13,color:TX1,cursor:'pointer'}}>⭐ VIP 고객</label>
                 </div>
+                <div style={{gridColumn:'1/-1'}}>
+                  <label style={lbl}>소개자 (이 고객을 소개해준 기존 고객)</label>
+                  <select style={inp} value={form.referred_by} onChange={e=>setForm(p=>({...p,referred_by:e.target.value}))}>
+                    <option value="">소개자 없음 (직접 방문)</option>
+                    {allClients.filter((c:any)=>c.id!==client.id).map((c:any)=>(
+                      <option key={c.id} value={c.id}>{c.name} {c.phone?`(${c.phone})`:''}</option>
+                    ))}
+                  </select>
+                </div>
                 <div style={{gridColumn:'1/-1'}}><label style={lbl}>메모</label><textarea style={{...inp,height:80,resize:'none' as const}} value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
               </div>
             </div>
           ):(
             <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,overflow:'hidden'}}>
-              {[{l:'이름',v:client.name},{l:'전화번호',v:client.phone||'—'},{l:'이메일',v:client.email||'—'},{l:'생일',v:client.birthday||'—'},{l:'최초 컨택 장소',v:client.contact_place||'—'},{l:'고객 주소',v:client.address||'—'},{l:'기존 차량',v:client.previous_car||'—'},{l:'최초 상담일',v:client.consultation_date||'—'},{l:'VIP',v:client.is_vip?'⭐ VIP':'—'},{l:'등록일',v:client.created_at?new Date(client.created_at).toLocaleDateString('ko-KR'):'—'}].map((r,i,arr)=>(
+              {[{l:'이름',v:client.name},{l:'전화번호',v:client.phone||'—'},{l:'이메일',v:client.email||'—'},{l:'생일',v:client.birthday||'—'},{l:'최초 컨택 장소',v:client.contact_place||'—'},{l:'고객 주소',v:client.address||'—'},{l:'기존 차량',v:client.previous_car||'—'},{l:'최초 상담일',v:client.consultation_date||'—'},{l:'VIP',v:client.is_vip?'⭐ VIP':'—'},{l:'소개자',v:allClients.find((c:any)=>c.id===client.referred_by)?.name||'직접 방문'},{l:'등록일',v:client.created_at?new Date(client.created_at).toLocaleDateString('ko-KR'):'—'}].map((r,i,arr)=>(
                 <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 22px',borderBottom:i<arr.length-1?`1px solid ${BORDER2}`:'none'}}>
                   <span style={{fontSize:13,color:TX3,fontWeight:500}}>{r.l}</span>
                   <span style={{fontSize:14,color:TX1,fontWeight:500}}>{r.v}</span>
@@ -303,13 +312,14 @@ export default function Home(){
     {id:'templates',label:'문자 템플릿'},
     {id:'partners',label:'제휴업체'},
     {id:'calendar',label:'캘린더'},
+    {id:'report',label:'실적 리포트'},
   ]
 
   if(loading) return <div style={{minHeight:'100vh',background:CREAM,display:'flex',alignItems:'center',justifyContent:'center',color:NAVY,fontSize:14}}>Loading...</div>
 
   return(
     <div style={{display:'flex',minHeight:'100vh',background:CREAM,fontFamily:"'DM Sans','Apple SD Gothic Neo',system-ui,sans-serif",fontSize:14}}>
-      {selectedClient&&<ClientDetail client={selectedClient} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} />}
+      {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} />}
       <aside style={{width:210,background:NAVY,display:'flex',flexDirection:'column',flexShrink:0}}>
         <div style={{padding:'28px 22px 22px',borderBottom:`1px solid ${NAVY2}`}}>
           <div style={{fontSize:10,color:NAVY3,letterSpacing:'.22em',marginBottom:6,textTransform:'uppercase'}}>Sales CRM</div>
@@ -336,6 +346,7 @@ export default function Home(){
         {page==='templates'&&<Templates templates={templates} setTemplates={setTemplates} />}
         {page==='partners'&&<Partners partners={partners} setPartners={setPartners} />}
         {page==='calendar'&&<Calendar />}
+        {page==='report'&&<Report clients={clients} />}
       </main>
     </div>
   )
@@ -973,6 +984,168 @@ function Calendar(){
               <span style={{fontSize:13,fontWeight:600,color:TX1}}>{allSchedules.length}건</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Report({clients}:any){
+  const now=new Date()
+  const [selYear,setSelYear]=useState(now.getFullYear())
+  const [selMonth,setSelMonth]=useState(now.getMonth()+1)
+
+  const monthNames=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']
+  const years=[now.getFullYear()-1,now.getFullYear(),now.getFullYear()+1]
+
+  // 해당 월 계약/출고 고객
+  const monthClients=clients.filter((c:any)=>{
+    const d=new Date(c.created_at)
+    return d.getFullYear()===selYear&&d.getMonth()+1===selMonth
+  })
+  const contracted=clients.filter((c:any)=>c.stage==='contract'||c.stage==='delivered')
+  const delivered=clients.filter((c:any)=>c.stage==='delivered')
+
+  // 소개 받은 고객 수
+  const referred=clients.filter((c:any)=>c.referred_by)
+  // 소개를 많이 한 고객 TOP5
+  const referrerCount:Record<string,number>={}
+  referred.forEach((c:any)=>{
+    if(c.referred_by) referrerCount[c.referred_by]=(referrerCount[c.referred_by]||0)+1
+  })
+  const topReferrers=Object.entries(referrerCount)
+    .sort((a:any,b:any)=>b[1]-a[1])
+    .slice(0,5)
+    .map(([id,count])=>({client:clients.find((c:any)=>c.id===id),count}))
+    .filter(r=>r.client)
+
+  // 단계별 전환율
+  const total=clients.length||1
+  const stageStats=STAGES.map(s=>({
+    ...s,
+    count:clients.filter((c:any)=>c.stage===s.key).length,
+    pct:Math.round(clients.filter((c:any)=>c.stage===s.key).length/total*100)
+  }))
+
+  // 월별 등록 추이 (최근 6개월)
+  const monthlyData=Array.from({length:6},(_,i)=>{
+    const d=new Date(selYear,selMonth-1-i,1)
+    const y=d.getFullYear(),m=d.getMonth()+1
+    const cnt=clients.filter((c:any)=>{
+      const cd=new Date(c.created_at)
+      return cd.getFullYear()===y&&cd.getMonth()+1===m
+    }).length
+    return {label:`${m}월`,count:cnt,y,m}
+  }).reverse()
+  const maxMonthly=Math.max(...monthlyData.map(d=>d.count),1)
+
+  return(
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:28}}>
+        <div>
+          <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>실적 리포트</div>
+          <div style={{fontSize:13,color:TX3}}>영업 현황 분석</div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <select style={{...inp,width:'auto'}} value={selYear} onChange={e=>setSelYear(Number(e.target.value))}>
+            {years.map(y=><option key={y} value={y}>{y}년</option>)}
+          </select>
+          <select style={{...inp,width:'auto'}} value={selMonth} onChange={e=>setSelMonth(Number(e.target.value))}>
+            {monthNames.map((m,i)=><option key={i+1} value={i+1}>{m}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* 핵심 지표 */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
+        {[
+          {l:'전체 고객',v:clients.length,s:'누적',c:TX1},
+          {l:'이번달 신규',v:monthClients.length,s:`${selMonth}월`,c:BLUE},
+          {l:'계약·출고',v:contracted.length,s:'누적',c:PURPLE},
+          {l:'소개 고객',v:referred.length,s:`전체의 ${Math.round(referred.length/total*100)}%`,c:GREEN},
+        ].map((s,i)=>(
+          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px'}}>
+            <div style={{fontSize:10,color:TX3,textTransform:'uppercase' as const,letterSpacing:'.08em',marginBottom:8,fontWeight:500}}>{s.l}</div>
+            <div style={{fontSize:30,fontWeight:400,color:s.c,letterSpacing:'-.02em'}}>{s.v}</div>
+            <div style={{fontSize:12,color:TX3,marginTop:4}}>{s.s}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+        {/* 월별 신규 고객 추이 */}
+        <div style={card}>
+          <div style={cardH}><span>최근 6개월 신규 고객</span></div>
+          <div style={{padding:'20px 24px'}}>
+            <div style={{display:'flex',alignItems:'flex-end',gap:10,height:120}}>
+              {monthlyData.map((d,i)=>(
+                <div key={i} style={{flex:1,display:'flex',flexDirection:'column' as const,alignItems:'center',gap:6}}>
+                  <div style={{fontSize:12,fontWeight:500,color:d.y===selYear&&d.m===selMonth?NAVY:TX2}}>{d.count}</div>
+                  <div style={{width:'100%',borderRadius:'2px 2px 0 0',background:d.y===selYear&&d.m===selMonth?NAVY:BORDER,height:`${Math.max(Math.round(d.count/maxMonthly*80),4)}px`,transition:'height .3s'}} />
+                  <div style={{fontSize:11,color:TX3}}>{d.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 계약 단계별 현황 */}
+        <div style={card}>
+          <div style={cardH}><span>계약 단계별 현황</span></div>
+          <div style={{padding:'16px 20px'}}>
+            {stageStats.map((s,i)=>(
+              <div key={i} style={{marginBottom:i===stageStats.length-1?0:14}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+                  <span style={badge(s.color,s.bg,s.bd)}>{s.label}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:TX1}}>{s.count}명 ({s.pct}%)</span>
+                </div>
+                <div style={{height:4,background:BORDER,borderRadius:2}}>
+                  <div style={{height:4,width:`${s.pct}%`,background:s.color,borderRadius:2,transition:'width .3s'}} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+        {/* 소개 TOP 고객 */}
+        <div style={card}>
+          <div style={cardH}><span>소개 많이 해준 고객 TOP 5</span></div>
+          {topReferrers.length===0&&<div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:14}}>소개 데이터가 없어요</div>}
+          {topReferrers.map((r:any,i:number)=>(
+            <div key={i} style={{...row,borderBottom:i===topReferrers.length-1?'none':`1px solid ${BORDER2}`}}>
+              <div style={{width:24,height:24,borderRadius:'50%',background:i===0?GOLD:BORDER,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:i===0?WHITE:TX3,flexShrink:0}}>{i+1}</div>
+              <div style={av(NAVY)}>{r.client.name?.[0]||'?'}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:500,color:TX1}}>{r.client.name}</div>
+                <div style={{fontSize:12,color:TX3}}>{r.client.phone||'—'}</div>
+              </div>
+              <span style={{fontSize:14,fontWeight:600,color:GREEN}}>{r.count}건</span>
+            </div>
+          ))}
+        </div>
+
+        {/* 이번달 신규 고객 목록 */}
+        <div style={card}>
+          <div style={cardH}>
+            <span>{selMonth}월 신규 고객</span>
+            <span style={{fontSize:12,color:TX3}}>{monthClients.length}명</span>
+          </div>
+          {monthClients.length===0&&<div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:14}}>이번달 신규 고객이 없어요</div>}
+          {monthClients.map((c:any,i:number)=>{
+            const stg=getStage(c.stage||'first_visit')
+            return(
+              <div key={c.id} style={{...row,padding:'12px 20px',borderBottom:i===monthClients.length-1?'none':`1px solid ${BORDER2}`}}>
+                <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:500,color:TX1}}>{c.name}</div>
+                  <div style={{fontSize:11,color:TX3}}>{c.interest_model||c.car_model||'차량 미정'}</div>
+                </div>
+                <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
