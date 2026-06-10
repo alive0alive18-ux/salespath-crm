@@ -960,12 +960,12 @@ function Calendar(){
                 const isSun=idx%7===0,isSat=idx%7===6
                 return(
                   <div key={day} onClick={()=>setSelectedDate(dateStr===selectedDate?null:dateStr)}
-                    style={{minHeight:80,padding:'8px 10px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSel?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',transition:'background .1s'}}>
+                    style={{minHeight:60,padding:'4px 6px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSel?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',transition:'background .1s'}}>
                     <div style={{fontSize:13,fontWeight:isToday?600:400,width:24,height:24,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:isToday?GOLD:'transparent',color:isToday?WHITE:isSun?RED:isSat?BLUE:TX1,marginBottom:4}}>{day}</div>
                     <div style={{display:'flex',flexDirection:'column',gap:2}}>
                       {daySc.slice(0,3).map((sc:any)=>{
                         const lb=getLabel(sc.note)
-                        return <div key={sc.id} style={{fontSize:10,padding:'2px 5px',borderRadius:2,background:lb.bg,color:lb.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.clients?.name} {lb.label}</div>
+                        return <div key={sc.id} style={{fontSize:9,padding:'1px 3px',borderRadius:2,background:lb.bg,color:lb.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.clients?.name} {lb.label}</div>
                       })}
                       {daySc.length>3&&<div style={{fontSize:10,color:TX3}}>+{daySc.length-3}건</div>}
                     </div>
