@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const NAVY='#1B2A4A',NAVY2='#243758',NAVY3='#6A7E9E',CREAM='#F8F5F0',CREAM2='#F2EDE8'
-const BORDER='#E8E0D5',BORDER2='#F0EBE4',WHITE='#FFFFFF',TX1='#1A1A1A',TX2='#555550',TX3='#AAAAAA'
+const BORDER='#E8E0D5',BORDER2='#F0EBE4',WHITE='#FFFFFF',TX1='#1A1A1A',TX2='#555550',TX3='#888888'
 const GOLD='#C9A84C',GOLD_BG='#FBF6E8',GOLD_TX='#8B6914'
 const GREEN='#2D6A4F',GREEN_BG='#F0FAF4',GREEN_BD='#BBF7D0'
 const BLUE='#1D4ED8',BLUE_BG='#EFF6FF',BLUE_BD='#BFDBFE'
@@ -31,11 +31,11 @@ function formatPhone(v:string) {
 const av=(c=NAVY)=>({width:36,height:36,borderRadius:'50%',background:c+'15',border:`1px solid ${c}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:500,color:c,flexShrink:0})
 const badge=(c:string,bg:string,bd:string)=>({fontSize:11,fontWeight:500,padding:'3px 10px',borderRadius:3,color:c,background:bg,border:`1px solid ${bd}`,whiteSpace:'nowrap' as const,letterSpacing:'.02em'})
 const btn=(v='def')=>({padding:v==='sm'?'6px 14px':v==='gold'?'10px 22px':'9px 18px',borderRadius:3,fontSize:13,fontWeight:500,cursor:'pointer',border:v==='gold'?'none':v==='navy'?'none':`1px solid ${BORDER}`,background:v==='gold'?GOLD:v==='navy'?NAVY:'transparent',color:v==='gold'?WHITE:v==='navy'?CREAM:TX2,transition:'all .12s',letterSpacing:'.02em'})
-const inp={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:3,padding:'10px 14px',fontSize:16,color:TX1,outline:'none',width:'100%',boxSizing:'border-box' as const,fontFamily:'inherit'}
-const lbl={fontSize:11,color:TX3,letterSpacing:'.07em',textTransform:'uppercase' as const,marginBottom:6,display:'block',fontWeight:500}
+const inp={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:3,padding:'10px 14px',fontSize:14,color:TX1,outline:'none',width:'100%',boxSizing:'border-box' as const,fontFamily:'inherit'}
+const lbl={fontSize:11,color:'#666',letterSpacing:'.07em',textTransform:'uppercase' as const,marginBottom:6,display:'block',fontWeight:600}
 const card={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',marginBottom:16}
-const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:13,fontWeight:500,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
-const row={display:'flex',alignItems:'center',padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,gap:12}
+const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:14,fontWeight:600,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
+const row={display:'flex',alignItems:'center',padding:'15px 20px',borderBottom:`1px solid ${BORDER2}`,gap:12}
 
 function getLabel(note:string){
   if(note?.includes('감사')) return {label:'감사문자',color:GREEN,bg:GREEN_BG,bd:GREEN_BD}
@@ -65,7 +65,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
     car_year:client.car_year||'',car_color:client.car_color||'',
     car_number:client.car_number||'',consultation_date:client.consultation_date||'',
     stage:client.stage||'first_visit',interest_model:client.interest_model||'',
-    budget:client.budget||'',competitor:client.competitor||'',birthday:client.birthday||'',
+    purchase_type:client.purchase_type||'',competitor:client.competitor||'',birthday:client.birthday||'',
     is_vip:client.is_vip||false,referred_by:client.referred_by||'',
   })
 
@@ -89,7 +89,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
 
   const save=async()=>{
     setSaving(true)
-    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,budget:form.budget||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
+    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,purchase_type:form.purchase_type||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
     if(form.delivery_date) u.delivery_date=form.delivery_date
     if(form.consultation_date) u.consultation_date=form.consultation_date
     if(form.birthday) u.birthday=form.birthday
@@ -180,7 +180,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
                     ))}
                   </select>
                 </div>
-                <div style={{gridColumn:'1/-1'}}><label style={lbl}>메모</label><textarea style={{...inp,height:80,resize:'none' as const}} value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
+                <div style={{gridColumn:'1/-1'}}><label style={lbl}>메모</label><textarea style={{...inp,height:140,resize:'none' as const,fontSize:15,lineHeight:1.7}} value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
               </div>
             </div>
           ):(
@@ -208,9 +208,19 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
                 </div>
               </div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-                <div style={{gridColumn:'1/-1'}}><label style={lbl}>차량 모델</label><input style={inp} placeholder="E 350 4MATIC" value={form.car_model} onChange={e=>setForm(p=>({...p,car_model:e.target.value}))} /></div>
-                <div><label style={lbl}>관심 차종</label><input style={inp} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
-                <div><label style={lbl}>예산</label><input style={inp} placeholder="1억 이하" value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
+                <div style={{gridColumn:'1/-1'}}><label style={lbl}>계약 차량 모델</label><input style={inp} placeholder="E 350 4MATIC" value={form.car_model} onChange={e=>setForm(p=>({...p,car_model:e.target.value}))} /></div>
+                <div><label style={lbl}>관심 차종 (구매 희망)</label><input style={inp} placeholder="GLE 450 AMG" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
+                <div>
+                  <label style={lbl}>구매 방식</label>
+                  <select style={inp} value={form.purchase_type} onChange={e=>setForm(p=>({...p,purchase_type:e.target.value}))}>
+                    <option value="">선택</option>
+                    <option value="현금">현금</option>
+                    <option value="할부">할부</option>
+                    <option value="리스">리스</option>
+                    <option value="렌트">렌트</option>
+                  </select>
+                </div>
+                <div><label style={lbl}>기존 보유 차량</label><input style={inp} placeholder="BMW 5시리즈 (2021)" value={form.previous_car} onChange={e=>setForm(p=>({...p,previous_car:e.target.value}))} /></div>
                 <div style={{gridColumn:'1/-1'}}><label style={lbl}>경쟁 차종</label><input style={inp} placeholder="BMW 5시리즈도 검토 중" value={form.competitor} onChange={e=>setForm(p=>({...p,competitor:e.target.value}))} /></div>
                 <div><label style={lbl}>차량 연식</label><input style={inp} placeholder="2024" value={form.car_year} onChange={e=>setForm(p=>({...p,car_year:e.target.value}))} /></div>
                 <div><label style={lbl}>차량 색상</label><input style={inp} placeholder="옵시디안 블랙" value={form.car_color} onChange={e=>setForm(p=>({...p,car_color:e.target.value}))} /></div>
@@ -224,7 +234,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
                 <span style={{fontSize:13,color:TX3,fontWeight:500}}>계약 단계</span>
                 <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
               </div>
-              {[{l:'차량 모델',v:client.car_model||'—'},{l:'관심 차종',v:client.interest_model||'—'},{l:'예산',v:client.budget||'—'},{l:'경쟁 차종',v:client.competitor||'—'},{l:'차량 연식',v:client.car_year||'—'},{l:'차량 색상',v:client.car_color||'—'},{l:'차량 번호',v:client.car_number||'—'},{l:'차량 인도일',v:client.delivery_date||'—'}].map((r,i,arr)=>(
+              {[{l:'차량 모델',v:client.car_model||'—'},{l:'관심 차종',v:client.interest_model||'—'},{l:'구매 방식',v:client.purchase_type||'—'},{l:'기존 차량',v:client.previous_car||'—'},{l:'경쟁 차종',v:client.competitor||'—'},{l:'차량 연식',v:client.car_year||'—'},{l:'차량 색상',v:client.car_color||'—'},{l:'차량 번호',v:client.car_number||'—'},{l:'차량 인도일',v:client.delivery_date||'—'}].map((r,i,arr)=>(
                 <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 22px',borderBottom:i<arr.length-1?`1px solid ${BORDER2}`:'none'}}>
                   <span style={{fontSize:13,color:TX3,fontWeight:500}}>{r.l}</span>
                   <span style={{fontSize:14,color:TX1,fontWeight:500}}>{r.v}</span>
@@ -609,6 +619,7 @@ function Clients({clients,setClients,onSelect}:any){
   const supabase=createClient()
   const [search,setSearch]=useState('')
   const [stageFilter,setStageFilter]=useState('all')
+  const [categoryFilter,setCategoryFilter]=useState('all')
   const [showForm,setShowForm]=useState(false)
   const [quickMode,setQuickMode]=useState(false)
   const [form,setForm]=useState({name:'',phone:'',car_model:'',consultation_date:'',address:'',memo:'',interest_model:'',budget:'',stage:'first_visit'})
@@ -617,7 +628,15 @@ function Clients({clients,setClients,onSelect}:any){
   const filtered=clients.filter((c:any)=>{
     const matchSearch=c.name?.includes(search)||c.car_model?.includes(search)||c.phone?.includes(search)
     const matchStage=stageFilter==='all'||c.stage===stageFilter
-    return matchSearch&&matchStage
+    let matchCat=true
+    if(categoryFilter==='delivered') matchCat=c.stage==='delivered'
+    else if(categoryFilter==='prospect') matchCat=c.stage!=='delivered'
+    else if(categoryFilter.startsWith('month_')){
+      const m=parseInt(categoryFilter.split('_')[1])
+      const d=c.consultation_date||c.created_at
+      if(d) matchCat=new Date(d).getMonth()+1===m
+    }
+    return matchSearch&&matchStage&&matchCat
   })
 
   const save=async()=>{
@@ -655,7 +674,7 @@ function Clients({clients,setClients,onSelect}:any){
             <div><label style={lbl}>관심 차종</label><input style={inp} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
             <div><label style={lbl}>예산</label><input style={inp} placeholder="1억 이하" value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
             {!quickMode&&<>
-              <div style={{gridColumn:'1/-1'}}><label style={lbl}>차량 모델</label><input style={inp} placeholder="E 350 4MATIC" value={form.car_model} onChange={e=>setForm(p=>({...p,car_model:e.target.value}))} /></div>
+              <div style={{gridColumn:'1/-1'}}><label style={lbl}>계약 차량 모델</label><input style={inp} placeholder="E 350 4MATIC" value={form.car_model} onChange={e=>setForm(p=>({...p,car_model:e.target.value}))} /></div>
               <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><input style={inp} placeholder="서울시 강남구..." value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
               <div style={{gridColumn:'1/-1'}}><label style={lbl}>최초 상담일</label><input style={inp} type="date" value={form.consultation_date} onChange={e=>setForm(p=>({...p,consultation_date:e.target.value}))} /></div>
               <div style={{gridColumn:'1/-1'}}>
@@ -682,6 +701,13 @@ function Clients({clients,setClients,onSelect}:any){
         </div>
       )}
 
+      <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap' as const}}>
+        {[{key:'all',label:'전체',c:TX1},{key:'delivered',label:'출고 고객',c:GREEN},{key:'prospect',label:'가망 고객',c:BLUE},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`,c:TX2}))].map(cat=>(
+          <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,fontWeight:categoryFilter===cat.key?500:400,flexShrink:0}}>
+            {cat.label}
+          </button>
+        ))}
+      </div>
       <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap' as const}}>
         <input style={{...inp,flex:1,minWidth:200}} placeholder="이름, 전화번호, 차량 검색..." value={search} onChange={e=>setSearch(e.target.value)} />
         <select style={{...inp,width:'auto'}} value={stageFilter} onChange={e=>setStageFilter(e.target.value)}>
@@ -940,7 +966,7 @@ function Calendar(){
     <div>
       <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>캘린더</div>
       <div style={{fontSize:13,color:TX3,marginBottom:26}}>월별 연락 일정 한눈에 보기</div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr',gap:16}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:20}}>
         <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 24px',borderBottom:`1px solid ${BORDER}`}}>
             <button onClick={()=>setCurrentDate(new Date(year,month-1,1))} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:3,padding:'6px 14px',fontSize:13,cursor:'pointer',color:TX2}}>‹</button>
@@ -960,12 +986,12 @@ function Calendar(){
                 const isSun=idx%7===0,isSat=idx%7===6
                 return(
                   <div key={day} onClick={()=>setSelectedDate(dateStr===selectedDate?null:dateStr)}
-                    style={{minHeight:60,padding:'4px 6px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSel?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',transition:'background .1s'}}>
+                    style={{minHeight:80,padding:'8px 10px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSel?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',transition:'background .1s'}}>
                     <div style={{fontSize:13,fontWeight:isToday?600:400,width:24,height:24,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:isToday?GOLD:'transparent',color:isToday?WHITE:isSun?RED:isSat?BLUE:TX1,marginBottom:4}}>{day}</div>
                     <div style={{display:'flex',flexDirection:'column',gap:2}}>
                       {daySc.slice(0,3).map((sc:any)=>{
                         const lb=getLabel(sc.note)
-                        return <div key={sc.id} style={{fontSize:9,padding:'1px 3px',borderRadius:2,background:lb.bg,color:lb.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.clients?.name} {lb.label}</div>
+                        return <div key={sc.id} style={{fontSize:10,padding:'2px 5px',borderRadius:2,background:lb.bg,color:lb.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sc.clients?.name} {lb.label}</div>
                       })}
                       {daySc.length>3&&<div style={{fontSize:10,color:TX3}}>+{daySc.length-3}건</div>}
                     </div>
@@ -976,7 +1002,7 @@ function Calendar(){
           )}
         </div>
         <div>
-          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'relative',top:0}}>
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'sticky',top:0}}>
             <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,fontSize:13,fontWeight:500,color:TX1}}>
               {selectedDate?`${selectedDate.replace(/-/g,'.')} 일정`:'날짜를 선택하세요'}
             </div>
@@ -1304,7 +1330,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {showQuickAdd&&<MobileQuickAdd clients={clients} setClients={setClients} onClose={()=>setShowQuickAdd(false)} />}
 
       {/* 상단 헤더 */}
-      <div style={{background:NAVY,padding:'16px 20px 12px',position:'relative',top:0,zIndex:50}}>
+      <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div>
             <div style={{fontSize:10,color:NAVY3,letterSpacing:'.2em',textTransform:'uppercase' as const}}>Sales CRM</div>
@@ -1330,7 +1356,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
         {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} />}
         {page==='templates'&&<MobileTemplates templates={templates} setTemplates={setTemplates} />}
         {page==='more'&&<MobileMore salesperson={salesperson} setSalesperson={setSalesperson} user={user} partners={partners} setPartners={setPartners} signOut={signOut} setPage={setPage} />}
-        {page==='calendar'&&<MobileCalendar setPage={setPage} />}
+        {page==='calendar'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>캘린더</div></div><Calendar /></div>}
         {page==='report'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>실적 리포트</div></div><Report clients={clients} /></div>}
         {page==='partners'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>제휴업체</div></div><Partners partners={partners} setPartners={setPartners} /></div>}
       </div>
