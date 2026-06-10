@@ -1330,6 +1330,9 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
         {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} />}
         {page==='templates'&&<MobileTemplates templates={templates} setTemplates={setTemplates} />}
         {page==='more'&&<MobileMore salesperson={salesperson} setSalesperson={setSalesperson} user={user} partners={partners} setPartners={setPartners} signOut={signOut} setPage={setPage} />}
+        {page==='calendar'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>캘린더</div></div><Calendar /></div>}
+        {page==='report'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>실적 리포트</div></div><Report clients={clients} /></div>}
+        {page==='partners'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>제휴업체</div></div><Partners partners={partners} setPartners={setPartners} /></div>}
       </div>
 
       {/* 하단 탭바 */}
@@ -1692,7 +1695,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
       <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
         {menus.map((m,i)=>(
           <div key={m.id} style={{display:'flex',alignItems:'center',padding:'16px',gap:14,borderBottom:i===menus.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}}
-            onClick={()=>m.id==='calendar'||m.id==='report'?setPage(m.id):setSection(m.id)}>
+            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'?setPage(m.id):setSection(m.id)}>
             <span style={{fontSize:22}}>{m.icon}</span>
             <span style={{fontSize:15,color:TX1,fontWeight:500}}>{m.label}</span>
             <span style={{marginLeft:'auto',color:TX3,fontSize:16}}>›</span>
