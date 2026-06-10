@@ -31,7 +31,7 @@ function formatPhone(v:string) {
 const av=(c=NAVY)=>({width:36,height:36,borderRadius:'50%',background:c+'15',border:`1px solid ${c}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:500,color:c,flexShrink:0})
 const badge=(c:string,bg:string,bd:string)=>({fontSize:11,fontWeight:500,padding:'3px 10px',borderRadius:3,color:c,background:bg,border:`1px solid ${bd}`,whiteSpace:'nowrap' as const,letterSpacing:'.02em'})
 const btn=(v='def')=>({padding:v==='sm'?'6px 14px':v==='gold'?'10px 22px':'9px 18px',borderRadius:3,fontSize:13,fontWeight:500,cursor:'pointer',border:v==='gold'?'none':v==='navy'?'none':`1px solid ${BORDER}`,background:v==='gold'?GOLD:v==='navy'?NAVY:'transparent',color:v==='gold'?WHITE:v==='navy'?CREAM:TX2,transition:'all .12s',letterSpacing:'.02em'})
-const inp={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:3,padding:'10px 14px',fontSize:14,color:TX1,outline:'none',width:'100%',boxSizing:'border-box' as const,fontFamily:'inherit'}
+const inp={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:3,padding:'10px 14px',fontSize:16,color:TX1,outline:'none',width:'100%',boxSizing:'border-box' as const,fontFamily:'inherit'}
 const lbl={fontSize:11,color:TX3,letterSpacing:'.07em',textTransform:'uppercase' as const,marginBottom:6,display:'block',fontWeight:500}
 const card={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',marginBottom:16}
 const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:13,fontWeight:500,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
