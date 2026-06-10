@@ -22,6 +22,15 @@ const BLUE    = '#1D4ED8'; const BLUE_BG  = '#EFF6FF'; const BLUE_BD  = '#BFDBFE
 const AMBER   = '#92400E'; const AMBER_BG = '#FFFBEB'; const AMBER_BD = '#FDE68A'
 const RED     = '#DC2626'
 
+// 전화번호 자동 하이픈
+function formatPhone(v: string) {
+  const n = v.replace(/\D/g, '')
+  if (n.length <= 3) return n
+  if (n.length <= 7) return `${n.slice(0,3)}-${n.slice(3)}`
+  if (n.length <= 11) return `${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7)}`
+  return `${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7,11)}`
+}
+
 const av = (c=NAVY) => ({ width:36, height:36, borderRadius:'50%', background:c+'15', border:`1px solid ${c}40`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:500, color:c, flexShrink:0 })
 const badge = (c:string, bg:string, bd:string) => ({ fontSize:11, fontWeight:500, padding:'3px 10px', borderRadius:3, color:c, background:bg, border:`1px solid ${bd}`, whiteSpace:'nowrap' as const, letterSpacing:'.02em' })
 const btn = (v='def') => ({ padding: v==='sm'?'6px 14px':v==='gold'?'10px 22px':'9px 18px', borderRadius:3, fontSize:13, fontWeight:500, cursor:'pointer', border: v==='gold'?'none':v==='navy'?'none':`1px solid ${BORDER}`, background: v==='gold'?GOLD:v==='navy'?NAVY:'transparent', color: v==='gold'?WHITE:v==='navy'?CREAM:TX2, transition:'all .12s', letterSpacing:'.02em' })
@@ -96,7 +105,6 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
   return (
     <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.6)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}} onClick={onClose}>
       <div style={{background:WHITE,borderRadius:6,width:640,maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 24px 80px rgba(27,42,74,0.2)'}} onClick={e=>e.stopPropagation()}>
-
         <div style={{padding:'22px 28px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between',background:CREAM}}>
           <div style={{display:'flex',alignItems:'center',gap:14}}>
             <div style={{...av(NAVY),width:50,height:50,fontSize:18}}>{client.name?.[0]||'?'}</div>
@@ -111,7 +119,6 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
             <button style={{...btn(),fontSize:18,padding:'4px 12px',color:TX3}} onClick={onClose}>✕</button>
           </div>
         </div>
-
         <div style={{display:'flex',borderBottom:`1px solid ${BORDER}`,background:WHITE}}>
           {tabs.map(t=>(
             <div key={t.id} onClick={()=>{setTab(t.id as any);setEditing(false)}} style={{flex:1,padding:'13px',textAlign:'center',fontSize:13,fontWeight:500,color:tab===t.id?NAVY:TX3,borderBottom:tab===t.id?`2px solid ${NAVY}`:'2px solid transparent',cursor:'pointer',transition:'all .12s',letterSpacing:'.01em'}}>
@@ -119,19 +126,21 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
             </div>
           ))}
         </div>
-
         <div style={{flex:1,overflowY:'auto',padding:'24px 28px',background:CREAM}}>
-
           {tab==='info'&&(
             editing?(
               <div style={{background:WHITE,borderRadius:4,padding:22,border:`1px solid ${BORDER}`}}>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-                  {[{k:'name',l:'이름',p:'홍길동'},{k:'phone',l:'전화번호',p:'010-0000-0000'},{k:'email',l:'이메일',p:'이메일 주소'},{k:'contact_place',l:'최초 컨택 장소',p:'전시장 방문'},{k:'address',l:'고객 주소',p:'서울시 강남구...',full:true},{k:'previous_car',l:'기존 차량',p:'BMW 5시리즈'},{k:'consultation_date',l:'최초 상담일',p:'',type:'date'}].map((f:any)=>(
+                  {[{k:'name',l:'이름',p:'홍길동'},{k:'email',l:'이메일',p:'이메일 주소'},{k:'contact_place',l:'최초 컨택 장소',p:'전시장 방문'},{k:'address',l:'고객 주소',p:'서울시 강남구...',full:true},{k:'previous_car',l:'기존 차량',p:'BMW 5시리즈'},{k:'consultation_date',l:'최초 상담일',p:'',type:'date'}].map((f:any)=>(
                     <div key={f.k} style={f.full?{gridColumn:'1/-1'}:{}}>
                       <label style={lbl}>{f.l}</label>
                       <input style={inp} type={f.type||'text'} placeholder={f.p} value={(form as any)[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} />
                     </div>
                   ))}
+                  <div>
+                    <label style={lbl}>전화번호</label>
+                    <input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} />
+                  </div>
                   <div style={{gridColumn:'1/-1'}}>
                     <label style={lbl}>메모</label>
                     <textarea style={{...inp,height:80,resize:'none' as const}} placeholder="특이사항 메모..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} />
@@ -150,7 +159,6 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
               </div>
             )
           )}
-
           {tab==='vehicle'&&(
             editing?(
               <div style={{background:WHITE,borderRadius:4,padding:22,border:`1px solid ${BORDER}`}}>
@@ -174,7 +182,6 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
               </div>
             )
           )}
-
           {tab==='history'&&(
             <div>
               <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,padding:20,marginBottom:16}}>
@@ -199,7 +206,6 @@ function ClientDetail({ client, onClose, onUpdate }: any) {
               </div>
             </div>
           )}
-
           {tab==='estimates'&&(
             <div>
               <label style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'24px',border:`2px dashed ${BORDER}`,borderRadius:4,cursor:'pointer',color:TX3,fontSize:14,background:WHITE,marginBottom:16,letterSpacing:'.02em'}}>
@@ -282,7 +288,6 @@ export default function Home() {
   return (
     <div style={{display:'flex',minHeight:'100vh',background:CREAM,fontFamily:"'DM Sans','Apple SD Gothic Neo',system-ui,sans-serif",fontSize:14}}>
       {selectedClient&&<ClientDetail client={selectedClient} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} />}
-
       <aside style={{width:210,background:NAVY,display:'flex',flexDirection:'column',flexShrink:0}}>
         <div style={{padding:'28px 22px 22px',borderBottom:`1px solid ${NAVY2}`}}>
           <div style={{fontSize:10,color:NAVY3,letterSpacing:'.22em',marginBottom:6,textTransform:'uppercase'}}>Sales CRM</div>
@@ -305,7 +310,6 @@ export default function Home() {
           <button style={{...btn(),fontSize:12,color:NAVY3,borderColor:NAVY2,width:'100%',letterSpacing:'.04em'}} onClick={signOut}>로그아웃</button>
         </div>
       </aside>
-
       <main style={{flex:1,padding:'32px 40px',overflowY:'auto',background:CREAM}}>
         {page==='dashboard'&&<Dashboard clients={clients} referrals={referrals} schedules={schedules} weekSchedules={weekSchedules} setPage={setPage} onSelect={setSelectedClient} />}
         {page==='today'&&<Today schedules={schedules} />}
@@ -334,7 +338,6 @@ function Dashboard({clients,referrals,schedules,weekSchedules,setPage,onSelect}:
         </div>
         <div style={{background:NAVY,color:GOLD,fontSize:12,fontWeight:500,padding:'8px 16px',borderRadius:3,letterSpacing:'.06em'}}>30일 무료 체험 중</div>
       </div>
-
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12,marginBottom:20}}>
         {[
           {l:'전체 고객',v:clients.length,s:`이번달 +${thisMonth}명`,vc:TX1},
@@ -349,7 +352,6 @@ function Dashboard({clients,referrals,schedules,weekSchedules,setPage,onSelect}:
           </div>
         ))}
       </div>
-
       <div style={{display:'grid',gridTemplateColumns:'2fr 1fr',gap:16,marginBottom:16}}>
         <div style={card}>
           <div style={cardH}>
@@ -371,7 +373,6 @@ function Dashboard({clients,referrals,schedules,weekSchedules,setPage,onSelect}:
             )
           })}
         </div>
-
         <div>
           <div style={{...card,marginBottom:16}}>
             <div style={cardH}>
@@ -393,14 +394,10 @@ function Dashboard({clients,referrals,schedules,weekSchedules,setPage,onSelect}:
               )
             })}
           </div>
-
           <div style={card}>
             <div style={cardH}><span>실적 현황</span></div>
             <div style={{padding:'18px 20px'}}>
-              {[
-                {l:'계약 목표',v:2,t:5,c:GOLD},
-                {l:'연락 완료율',v:18,t:22,c:GREEN},
-              ].map((s,i)=>(
+              {[{l:'계약 목표',v:2,t:5,c:GOLD},{l:'연락 완료율',v:18,t:22,c:GREEN}].map((s,i)=>(
                 <div key={i} style={{marginBottom:i===0?16:0}}>
                   <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
                     <span style={{fontSize:13,color:TX2}}>{s.l}</span>
@@ -415,7 +412,6 @@ function Dashboard({clients,referrals,schedules,weekSchedules,setPage,onSelect}:
           </div>
         </div>
       </div>
-
       <div style={card}>
         <div style={cardH}>
           <span>최근 등록 고객</span>
@@ -478,18 +474,25 @@ function Clients({clients,setClients,onSelect}:any) {
   const supabase = createClient()
   const [search,setSearch] = useState('')
   const [showForm,setShowForm] = useState(false)
-  const [form,setForm] = useState({name:'',phone:'',car_model:'',consultation_date:''})
+  const [form,setForm] = useState({name:'',phone:'',car_model:'',consultation_date:'',address:'',memo:''})
   const [saving,setSaving] = useState(false)
   const filtered = clients.filter((c:any)=>c.name?.includes(search)||c.car_model?.includes(search))
 
   const save = async () => {
     if(!form.name) return; setSaving(true)
     const {data:{user}} = await supabase.auth.getUser()
-    const ins:any = {salesperson_id:user?.id,name:form.name,phone:form.phone||null,car_model:form.car_model||null}
+    const ins:any = {
+      salesperson_id:user?.id,
+      name:form.name,
+      phone:form.phone||null,
+      car_model:form.car_model||null,
+      address:form.address||null,
+      memo:form.memo||null,
+    }
     if(form.consultation_date) ins.consultation_date=form.consultation_date
     const {data} = await supabase.from('clients').insert(ins).select()
     if(data) setClients((p:any)=>[data[0],...p])
-    setForm({name:'',phone:'',car_model:'',consultation_date:''}); setShowForm(false); setSaving(false)
+    setForm({name:'',phone:'',car_model:'',consultation_date:'',address:'',memo:''}); setShowForm(false); setSaving(false)
   }
 
   return (
@@ -507,9 +510,17 @@ function Clients({clients,setClients,onSelect}:any) {
           <div style={cardH}><span>신규 고객 등록</span></div>
           <div style={{padding:22,display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
             <div><label style={lbl}>이름 *</label><input style={inp} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} /></div>
+            <div>
+              <label style={lbl}>전화번호</label>
+              <input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} />
+            </div>
             <div style={{gridColumn:'1/-1'}}><label style={lbl}>차량 모델</label><input style={inp} placeholder="E 350 4MATIC" value={form.car_model} onChange={e=>setForm(p=>({...p,car_model:e.target.value}))} /></div>
+            <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><input style={inp} placeholder="서울시 강남구..." value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
             <div style={{gridColumn:'1/-1'}}><label style={lbl}>최초 상담일</label><input style={inp} type="date" value={form.consultation_date} onChange={e=>setForm(p=>({...p,consultation_date:e.target.value}))} /></div>
+            <div style={{gridColumn:'1/-1'}}>
+              <label style={lbl}>메모</label>
+              <textarea style={{...inp,height:72,resize:'none' as const}} placeholder="특이사항 메모..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} />
+            </div>
             <div style={{gridColumn:'1/-1',display:'flex',gap:8,justifyContent:'flex-end'}}>
               <button style={btn()} onClick={()=>setShowForm(false)}>취소</button>
               <button style={btn('navy')} onClick={save} disabled={saving}>{saving?'저장중...':'저장'}</button>
@@ -519,7 +530,6 @@ function Clients({clients,setClients,onSelect}:any) {
       )}
 
       <div style={{marginBottom:14}}><input style={inp} placeholder="이름 또는 차량 모델 검색..." value={search} onChange={e=>setSearch(e.target.value)} /></div>
-
       <div style={card}>
         <div style={{display:'grid',gridTemplateColumns:'1.5fr 2fr 1.2fr 0.7fr',padding:'12px 20px',background:CREAM2,fontSize:11,color:TX3,letterSpacing:'.07em',textTransform:'uppercase',fontWeight:500,borderBottom:`1px solid ${BORDER}`}}>
           <span>고객</span><span>차량</span><span>상담일</span><span></span>
@@ -599,7 +609,7 @@ function Partners({partners,setPartners}:any) {
           <div style={cardH}><span>신규 제휴업체 등록</span></div>
           <div style={{padding:22,display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
             <div><label style={lbl}>업체명 *</label><input style={inp} placeholder="프리미엄 광택 강남점" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="02-000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} /></div>
+            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="02-000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
             <div><label style={lbl}>업종</label><input style={inp} placeholder="광택·세라믹" value={form.category} onChange={e=>setForm(p=>({...p,category:e.target.value}))} /></div>
             <div><label style={lbl}>리워드 내용</label><input style={inp} placeholder="20% 할인 바우처" value={form.reward_description} onChange={e=>setForm(p=>({...p,reward_description:e.target.value}))} /></div>
             <div style={{gridColumn:'1/-1',display:'flex',gap:8,justifyContent:'flex-end'}}>
@@ -650,12 +660,7 @@ function Calendar() {
       setLoading(true)
       const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0]
       const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0]
-      const { data } = await supabase
-        .from('schedules')
-        .select('*, clients(name, car_model)')
-        .gte('scheduled_date', startOfMonth)
-        .lte('scheduled_date', endOfMonth)
-        .order('scheduled_date')
+      const { data } = await supabase.from('schedules').select('*, clients(name, car_model)').gte('scheduled_date', startOfMonth).lte('scheduled_date', endOfMonth).order('scheduled_date')
       setAllSchedules(data || [])
       setLoading(false)
     }
@@ -665,7 +670,6 @@ function Calendar() {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
 
-  // 달력 날짜 배열 생성
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const days: (number | null)[] = []
@@ -675,7 +679,6 @@ function Calendar() {
   const getDateStr = (day: number) => `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
   const getSchedulesForDay = (day: number) => allSchedules.filter(s => s.scheduled_date === getDateStr(day))
   const todayStr = new Date().toISOString().split('T')[0]
-
   const selectedSchedules = selectedDate ? allSchedules.filter(s => s.scheduled_date === selectedDate) : []
   const weekDays = ['일','월','화','수','목','금','토']
   const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']
@@ -684,27 +687,18 @@ function Calendar() {
     <div>
       <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>캘린더</div>
       <div style={{fontSize:13,color:TX3,marginBottom:26}}>월별 연락 일정 한눈에 보기</div>
-
       <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:20}}>
-        {/* 캘린더 */}
         <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden'}}>
-          {/* 헤더 */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 24px',borderBottom:`1px solid ${BORDER}`}}>
             <button onClick={prevMonth} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:3,padding:'6px 14px',fontSize:13,cursor:'pointer',color:TX2}}>‹</button>
-            <div style={{fontSize:16,fontWeight:500,color:TX1,letterSpacing:'-.01em'}}>
-              {year}년 {monthNames[month]}
-            </div>
+            <div style={{fontSize:16,fontWeight:500,color:TX1,letterSpacing:'-.01em'}}>{year}년 {monthNames[month]}</div>
             <button onClick={nextMonth} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:3,padding:'6px 14px',fontSize:13,cursor:'pointer',color:TX2}}>›</button>
           </div>
-
-          {/* 요일 헤더 */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',background:CREAM2}}>
             {weekDays.map((d,i) => (
               <div key={d} style={{padding:'10px 0',textAlign:'center',fontSize:11,fontWeight:500,color:i===0?'#DC2626':i===6?'#1D4ED8':TX3,letterSpacing:'.04em'}}>{d}</div>
             ))}
           </div>
-
-          {/* 날짜 그리드 */}
           {loading ? (
             <div style={{padding:'48px',textAlign:'center',color:TX3,fontSize:14}}>불러오는 중...</div>
           ) : (
@@ -718,42 +712,19 @@ function Calendar() {
                 const isWeekend = (idx % 7 === 0)
                 const isSat = (idx % 7 === 6)
                 return (
-                  <div key={day}
-                    onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
-                    style={{
-                      minHeight:80, padding:'8px 10px',
-                      borderRight:`1px solid ${BORDER2}`,
-                      borderBottom:`1px solid ${BORDER2}`,
-                      background: isSelected ? '#EEF2FF' : isToday ? GOLD_BG : WHITE,
-                      cursor:'pointer',
-                      transition:'background .1s'
-                    }}
-                  >
-                    <div style={{
-                      fontSize:13, fontWeight: isToday ? 600 : 400,
-                      color: isToday ? GOLD_TX : isWeekend ? '#DC2626' : isSat ? '#1D4ED8' : TX1,
-                      marginBottom:4,
-                      width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center',
-                      borderRadius:'50%',
-                      background: isToday ? GOLD : 'transparent',
-                      color: isToday ? WHITE : isWeekend ? '#DC2626' : isSat ? '#1D4ED8' : TX1,
-                    }}>{day}</div>
+                  <div key={day} onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
+                    style={{minHeight:80,padding:'8px 10px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSelected?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',transition:'background .1s'}}>
+                    <div style={{fontSize:13,fontWeight:isToday?600:400,width:24,height:24,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:isToday?GOLD:'transparent',color:isToday?WHITE:isWeekend?'#DC2626':isSat?'#1D4ED8':TX1,marginBottom:4}}>{day}</div>
                     <div style={{display:'flex',flexDirection:'column',gap:2}}>
                       {daySchedules.slice(0,3).map((sc:any) => {
                         const lb = getLabel(sc.note)
                         return (
-                          <div key={sc.id} style={{
-                            fontSize:10, padding:'2px 5px', borderRadius:2,
-                            background:lb.bg, color:lb.color,
-                            overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'
-                          }}>
+                          <div key={sc.id} style={{fontSize:10,padding:'2px 5px',borderRadius:2,background:lb.bg,color:lb.color,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
                             {sc.clients?.name} {lb.label}
                           </div>
                         )
                       })}
-                      {daySchedules.length > 3 && (
-                        <div style={{fontSize:10,color:TX3}}>+{daySchedules.length-3}건</div>
-                      )}
+                      {daySchedules.length > 3 && <div style={{fontSize:10,color:TX3}}>+{daySchedules.length-3}건</div>}
                     </div>
                   </div>
                 )
@@ -761,23 +732,13 @@ function Calendar() {
             </div>
           )}
         </div>
-
-        {/* 선택한 날 일정 */}
         <div>
           <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflow:'hidden',position:'sticky',top:0}}>
             <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,fontSize:13,fontWeight:500,color:TX1}}>
               {selectedDate ? `${selectedDate.replace(/-/g,'.')} 일정` : '날짜를 선택하세요'}
             </div>
-            {!selectedDate && (
-              <div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>
-                달력에서 날짜를 클릭하면<br/>그날 일정이 표시돼요
-              </div>
-            )}
-            {selectedDate && selectedSchedules.length === 0 && (
-              <div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>
-                이날 일정이 없어요 😊
-              </div>
-            )}
+            {!selectedDate && <div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>달력에서 날짜를 클릭하면<br/>그날 일정이 표시돼요</div>}
+            {selectedDate && selectedSchedules.length === 0 && <div style={{padding:'32px',textAlign:'center',color:TX3,fontSize:13}}>이날 일정이 없어요 😊</div>}
             {selectedSchedules.map((sc:any, i:number) => {
               const lb = getLabel(sc.note)
               return (
@@ -795,20 +756,10 @@ function Calendar() {
               )
             })}
           </div>
-
-          {/* 이번달 요약 */}
           <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px',marginTop:16}}>
             <div style={{fontSize:12,fontWeight:500,color:TX1,marginBottom:14,letterSpacing:'.02em'}}>{monthNames[month]} 일정 요약</div>
-            {[
-              {label:'감사문자', color:GREEN, bg:GREEN_BG, bd:GREEN_BD},
-              {label:'1년 점검', color:BLUE, bg:BLUE_BG, bd:BLUE_BD},
-              {label:'2년 점검', color:BLUE, bg:BLUE_BG, bd:BLUE_BD},
-              {label:'3년 점검', color:BLUE, bg:BLUE_BG, bd:BLUE_BD},
-            ].map(type => {
-              const count = allSchedules.filter(s => {
-                const lb = getLabel(s.note)
-                return lb.label === type.label
-              }).length
+            {[{label:'감사문자',color:GREEN,bg:GREEN_BG,bd:GREEN_BD},{label:'1년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD},{label:'2년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD},{label:'3년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD}].map(type => {
+              const count = allSchedules.filter(s => getLabel(s.note).label === type.label).length
               if (count === 0) return null
               return (
                 <div key={type.label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
