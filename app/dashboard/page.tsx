@@ -1425,7 +1425,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
         {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} />}
         {page==='templates'&&<MobileTemplates templates={templates} setTemplates={setTemplates} />}
         {page==='more'&&<MobileMore salesperson={salesperson} setSalesperson={setSalesperson} user={user} partners={partners} setPartners={setPartners} signOut={signOut} setPage={setPage} />}
-        {page==='calendar'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>캘린더</div></div><Calendar /></div>}
+        {page==='calendar'&&<MobileCalendar setPage={setPage} />}
         {page==='report'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>실적 리포트</div></div><Report clients={clients} /></div>}
         {page==='partners'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>제휴업체</div></div><Partners partners={partners} setPartners={setPartners} /></div>}
       </div>
@@ -1736,6 +1736,185 @@ function MobileTemplates({templates,setTemplates}:any){
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function MobileCalendar({setPage}:any){
+  const supabase=createClient()
+  const [currentDate,setCurrentDate]=useState(new Date())
+  const [allSchedules,setAllSchedules]=useState<any[]>([])
+  const [allClients,setAllClients]=useState<any[]>([])
+  const [selectedDate,setSelectedDate]=useState<string|null>(null)
+  const [loading,setLoading]=useState(true)
+  const [showAddForm,setShowAddForm]=useState(false)
+  const [addForm,setAddForm]=useState({type:'memo',client_id:'',note:'',time:''})
+  const [saving,setSaving]=useState(false)
+  const year=currentDate.getFullYear(),month=currentDate.getMonth()
+
+  useEffect(()=>{
+    const load=async()=>{
+      setLoading(true)
+      const s=new Date(year,month,1).toISOString().split('T')[0]
+      const e=new Date(year,month+1,0).toISOString().split('T')[0]
+      const[sc,cl]=await Promise.all([
+        supabase.from('schedules').select('*, clients(name,car_model)').gte('scheduled_date',s).lte('scheduled_date',e).order('scheduled_date'),
+        supabase.from('clients').select('id,name,phone').order('name')
+      ])
+      setAllSchedules(sc.data||[]);setAllClients(cl.data||[]);setLoading(false)
+    }
+    load()
+  },[year,month])
+
+  const firstDay=new Date(year,month,1).getDay()
+  const daysInMonth=new Date(year,month+1,0).getDate()
+  const days:(number|null)[]=[]
+  for(let i=0;i<firstDay;i++) days.push(null)
+  for(let i=1;i<=daysInMonth;i++) days.push(i)
+
+  const getDateStr=(day:number)=>`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+  const todayStr=new Date().toISOString().split('T')[0]
+  const selectedSchedules=selectedDate?allSchedules.filter(s=>s.scheduled_date===selectedDate):[]
+  const weekDays=['일','월','화','수','목','금','토']
+  const monthNames=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월']
+
+  const addSchedule=async()=>{
+    if(!addForm.note.trim()||!selectedDate) return;setSaving(true)
+    const ins:any={scheduled_date:selectedDate,type:'inspection',is_contacted:false,note:(addForm.time?`[${addForm.time}] `:'')+( addForm.type==='client'?addForm.note:`📝 ${addForm.note}`)}
+    if(addForm.type==='client'&&addForm.client_id) ins.client_id=addForm.client_id
+    const{data}=await supabase.from('schedules').insert(ins).select('*, clients(name,car_model)')
+    if(data) setAllSchedules(p=>[...p,...data])
+    setShowAddForm(false);setAddForm({type:'memo',client_id:'',note:'',time:''});setSaving(false)
+  }
+  const delSchedule=async(id:string)=>{await supabase.from('schedules').delete().eq('id',id);setAllSchedules(p=>p.filter(s=>s.id!==id))}
+
+  return(
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+        <button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button>
+        <div style={{fontSize:18,fontWeight:600,color:TX1}}>캘린더</div>
+      </div>
+
+      {/* 월 네비게이션 */}
+      <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',borderBottom:`1px solid ${BORDER2}`}}>
+          <button onClick={()=>setCurrentDate(new Date(year,month-1,1))} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:6,padding:'6px 14px',fontSize:16,cursor:'pointer',color:TX2}}>‹</button>
+          <div style={{fontSize:16,fontWeight:600,color:TX1}}>{year}년 {monthNames[month]}</div>
+          <button onClick={()=>setCurrentDate(new Date(year,month+1,1))} style={{background:'transparent',border:`1px solid ${BORDER}`,borderRadius:6,padding:'6px 14px',fontSize:16,cursor:'pointer',color:TX2}}>›</button>
+        </div>
+
+        {/* 요일 헤더 */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',background:CREAM2}}>
+          {weekDays.map((d,i)=>(
+            <div key={d} style={{padding:'8px 0',textAlign:'center' as const,fontSize:11,fontWeight:600,color:i===0?RED:i===6?BLUE:TX3}}>{d}</div>
+          ))}
+        </div>
+
+        {/* 날짜 그리드 */}
+        {loading?<div style={{padding:'32px',textAlign:'center' as const,color:TX3}}>불러오는 중...</div>:(
+          <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)'}}>
+            {days.map((day,idx)=>{
+              if(!day) return <div key={`e-${idx}`} style={{minHeight:44,borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`}} />
+              const dateStr=getDateStr(day)
+              const daySc=allSchedules.filter(s=>s.scheduled_date===dateStr)
+              const isToday=dateStr===todayStr
+              const isSel=dateStr===selectedDate
+              const isSun=idx%7===0,isSat=idx%7===6
+              return(
+                <div key={day} onClick={()=>{setSelectedDate(dateStr===selectedDate?null:dateStr);setShowAddForm(false)}}
+                  style={{minHeight:44,padding:'4px 2px',borderRight:`1px solid ${BORDER2}`,borderBottom:`1px solid ${BORDER2}`,background:isSel?'#EEF2FF':isToday?GOLD_BG:WHITE,cursor:'pointer',display:'flex',flexDirection:'column' as const,alignItems:'center'}}>
+                  <div style={{width:26,height:26,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'50%',background:isToday?GOLD:'transparent',color:isToday?WHITE:isSun?RED:isSat?BLUE:TX1,fontSize:12,fontWeight:isToday?700:400,marginBottom:2}}>{day}</div>
+                  {daySc.length>0&&(
+                    <div style={{display:'flex',gap:2,flexWrap:'wrap' as const,justifyContent:'center'}}>
+                      {daySc.slice(0,2).map((sc:any)=>{
+                        const lb=getLabel(sc.note)
+                        return <div key={sc.id} style={{width:6,height:6,borderRadius:'50%',background:lb.color}} />
+                      })}
+                      {daySc.length>2&&<div style={{fontSize:8,color:TX3}}>+{daySc.length-2}</div>}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 선택된 날짜 일정 */}
+      {selectedDate&&(
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',marginBottom:12}}>
+          <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER2}`,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <span style={{fontSize:14,fontWeight:600,color:TX1}}>{selectedDate.replace(/-/g,'.')} 일정</span>
+            <button style={{...btn('navy'),padding:'5px 12px',fontSize:12,borderRadius:6}} onClick={()=>setShowAddForm(v=>!v)}>{showAddForm?'✕':'+ 추가'}</button>
+          </div>
+
+          {showAddForm&&(
+            <div style={{padding:'14px 16px',borderBottom:`1px solid ${BORDER2}`,background:CREAM}}>
+              <div style={{display:'flex',gap:8,marginBottom:10}}>
+                {[{v:'memo',l:'📝 개인 메모'},{v:'client',l:'👤 고객 연결'}].map(t=>(
+                  <button key={t.v} onClick={()=>setAddForm(p=>({...p,type:t.v,client_id:''}))} style={{flex:1,padding:'7px',borderRadius:6,fontSize:12,cursor:'pointer',fontWeight:addForm.type===t.v?600:400,background:addForm.type===t.v?NAVY:WHITE,color:addForm.type===t.v?WHITE:TX2,border:`1px solid ${addForm.type===t.v?NAVY:BORDER}`}}>{t.l}</button>
+                ))}
+              </div>
+              {addForm.type==='client'&&(
+                <select style={{...inp,fontSize:16,marginBottom:10}} value={addForm.client_id} onChange={e=>setAddForm(p=>({...p,client_id:e.target.value}))}>
+                  <option value="">고객 선택...</option>
+                  {allClients.map((c:any)=><option key={c.id} value={c.id}>{c.name} {c.phone?`(${c.phone})`:''}</option>)}
+                </select>
+              )}
+              <input style={{...inp,fontSize:16,marginBottom:10}} type="time" value={addForm.time} onChange={e=>setAddForm(p=>({...p,time:e.target.value}))} placeholder="시간 (선택)" />
+              <textarea style={{...inp,height:72,resize:'none' as const,fontSize:15,marginBottom:10}} placeholder={addForm.type==='memo'?'메모 내용...':'팔로업, 미팅 내용...'} value={addForm.note} onChange={e=>setAddForm(p=>({...p,note:e.target.value}))} />
+              <button style={{...btn('navy'),width:'100%',padding:'12px',borderRadius:6,fontSize:15}} onClick={addSchedule} disabled={saving}>{saving?'저장중...':'저장'}</button>
+            </div>
+          )}
+
+          {selectedSchedules.length===0&&!showAddForm&&(
+            <div style={{padding:'24px',textAlign:'center' as const,color:TX3,fontSize:13}}>
+              <div style={{fontSize:20,marginBottom:6}}>📅</div>
+              이날 일정이 없어요<br/>
+              <span style={{fontSize:12,color:GOLD,cursor:'pointer'}} onClick={()=>setShowAddForm(true)}>+ 일정 추가하기</span>
+            </div>
+          )}
+
+          {selectedSchedules.map((sc:any,i:number)=>{
+            const lb=getLabel(sc.note)
+            return(
+              <div key={sc.id} style={{padding:'12px 16px',borderBottom:i===selectedSchedules.length-1?'none':`1px solid ${BORDER2}`,display:'flex',alignItems:'center',gap:10}}>
+                <div style={{...av(lb.color),width:32,height:32,fontSize:12,flexShrink:0}}>{sc.clients?.name?.[0]||'📝'}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:500,color:TX1}}>{sc.clients?.name||'개인 메모'}</div>
+                  <div style={{fontSize:11,color:TX3}}>{sc.note.replace(/^\[.+?\]\s*/,'').replace(/^📝\s*/,'')}</div>
+                </div>
+                <div style={{display:'flex',alignItems:'center',gap:6}}>
+                  <span style={badge(lb.color,lb.bg,lb.bd)}>{lb.label}</span>
+                  <button style={{fontSize:13,color:TX3,background:'transparent',border:'none',cursor:'pointer',padding:'4px'}} onClick={()=>delSchedule(sc.id)}>✕</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* 이달 요약 */}
+      <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'14px 16px'}}>
+        <div style={{fontSize:13,fontWeight:600,color:TX1,marginBottom:10}}>{monthNames[month]} 일정 요약</div>
+        {allSchedules.length===0&&<div style={{fontSize:13,color:TX3}}>이번달 일정이 없어요</div>}
+        {[{label:'감사문자',color:GREEN,bg:GREEN_BG,bd:GREEN_BD},{label:'1년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD},{label:'2년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD},{label:'3년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD}].map(type=>{
+          const count=allSchedules.filter(s=>getLabel(s.note).label===type.label).length
+          if(count===0) return null
+          return(
+            <div key={type.label} style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+              <span style={badge(type.color,type.bg,type.bd)}>{type.label}</span>
+              <span style={{fontSize:13,fontWeight:500,color:TX1}}>{count}건</span>
+            </div>
+          )
+        })}
+        {allSchedules.length>0&&(
+          <div style={{borderTop:`1px solid ${BORDER2}`,marginTop:8,paddingTop:8,display:'flex',justifyContent:'space-between'}}>
+            <span style={{fontSize:12,color:TX3}}>총 일정</span>
+            <span style={{fontSize:13,fontWeight:600,color:TX1}}>{allSchedules.length}건</span>
+          </div>
+        )}
       </div>
     </div>
   )
