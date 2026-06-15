@@ -67,7 +67,7 @@ export default function LandingPage() {
               ))}
             </div>
             <div style={{ display:'flex', gap:8 }}>
-              <button onClick={()=>router.push('/login')} style={{ display:mounted&&isMobile?'none':'block', padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:500, cursor:'pointer', border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0' }}>로그인</button>
+              <button onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:500, cursor:'pointer', border:`1px solid #3A5070`, background:'transparent', color:'#F8F5F0' }}>로그인</button>
               <button onClick={()=>router.push('/login')} style={{ padding:'7px 16px', borderRadius:4, fontSize:13, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>무료 시작</button>
             </div>
           </div>
@@ -228,6 +228,71 @@ export default function LandingPage() {
               30일 무료 체험 시작하기
             </button>
             <p style={{ fontSize:12, color:'#4A6080', marginTop:14 }}>신용카드 불필요 · 언제든 취소 가능</p>
+          </div>
+        </section>
+
+        {/* 앱 설치 안내 */}
+        <section style={{ padding:mounted&&isMobile?'40px 16px':'60px 32px', background:'#F2EDE8', borderTop:`1px solid ${BORDER}` }}>
+          <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center' as const }}>
+            <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>App Install</div>
+            <h2 style={{ fontSize:mounted&&isMobile?24:32, fontWeight:700, color:'#1B2A4A', marginBottom:12 }}>📱 앱으로 설치하세요</h2>
+            <p style={{ fontSize:14, color:'#555550', lineHeight:1.7, marginBottom:32 }}>앱스토어 없이 홈 화면에 바로 설치할 수 있어요!</p>
+            <div style={{ display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr':'1fr 1fr', gap:16 }}>
+
+              {/* 아이폰 */}
+              <div style={{ background:'#FFFFFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'24px 20px', textAlign:'left' as const }}>
+                <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" rx="8" fill="#1B2A4A"/>
+                    <path d="M18 6C15.5 6 13.5 8 13.5 10.5C13.5 10.7 13.5 10.9 13.6 11.1C11.2 11.5 9 13.8 9 17C9 21.5 12 27 15 27C16 27 16.8 26.5 18 26.5C19.2 26.5 20 27 21 27C24 27 27 21.5 27 17C27 13.8 24.8 11.5 22.4 11.1C22.5 10.9 22.5 10.7 22.5 10.5C22.5 8 20.5 6 18 6Z" fill="white"/>
+                    <path d="M18 6C19.5 6 20.5 7 20.5 8.5" stroke="#1B2A4A" strokeWidth="0.5"/>
+                  </svg>
+                  <div>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#1B2A4A' }}>아이폰 (iOS)</div>
+                    <div style={{ fontSize:12, color:'#888' }}>Safari 브라우저</div>
+                  </div>
+                </div>
+                {['Safari에서 SalesPath 접속','하단 공유버튼 탭 (□↑)','홈 화면에 추가 선택','오른쪽 상단 추가 탭'].map((s,i)=>(
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                    <div style={{ width:22, height:22, borderRadius:'50%', background:'#1B2A4A', color:'#C9A84C', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
+                    <span style={{ fontSize:13, color:'#555' }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* 안드로이드 */}
+              <div style={{ background:'#FFFFFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'24px 20px', textAlign:'left' as const }}>
+                <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" rx="8" fill="#1B2A4A"/>
+                    <path d="M10 14C10 12.9 10.9 12 12 12H24C25.1 12 26 12.9 26 14V24C26 25.1 25.1 26 24 26H12C10.9 26 10 25.1 10 24V14Z" fill="white"/>
+                    <circle cx="14" cy="19" r="1.5" fill="#1B2A4A"/>
+                    <circle cx="18" cy="19" r="1.5" fill="#1B2A4A"/>
+                    <circle cx="22" cy="19" r="1.5" fill="#1B2A4A"/>
+                    <path d="M13 12L11 9M23 12L25 9" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <div>
+                    <div style={{ fontSize:16, fontWeight:700, color:'#1B2A4A' }}>안드로이드</div>
+                    <div style={{ fontSize:12, color:'#888' }}>Chrome 브라우저</div>
+                  </div>
+                </div>
+                {['Chrome에서 SalesPath 접속','우측 상단 ⋯ 버튼 탭','홈 화면에 추가 선택','설치 버튼 탭'].map((s,i)=>(
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                    <div style={{ width:22, height:22, borderRadius:'50%', background:'#1B2A4A', color:'#C9A84C', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
+                    <span style={{ fontSize:13, color:'#555' }}>{s}</span>
+                  </div>
+                ))}
+                <button
+                  onClick={()=>{
+                    const e = new Event('beforeinstallprompt')
+                    window.dispatchEvent(e)
+                  }}
+                  style={{ width:'100%', marginTop:8, padding:'11px', borderRadius:6, fontSize:13, fontWeight:600, cursor:'pointer', border:'none', background:'#1B2A4A', color:'#C9A84C' }}>
+                  📲 앱 설치하기
+                </button>
+              </div>
+
+            </div>
           </div>
         </section>
 
