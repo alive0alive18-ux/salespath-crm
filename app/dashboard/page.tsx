@@ -1426,6 +1426,7 @@ function Profile({salesperson,setSalesperson,user}:any){
 function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClients,schedules,weekSchedules,templates,setTemplates,partners,setPartners,selectedClient,setSelectedClient,signOut}:any){
   const [showQuickAdd,setShowQuickAdd]=useState(false)
   const [showCardScan,setShowCardScan]=useState(false)
+  const [callMemo,setCallMemo]=useState<any>(null)
 
   const tabs=[
     {id:'dashboard',icon:'🏠',label:'홈'},
@@ -1440,6 +1441,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients((p:any)=>p.map((c:any)=>c.id===u.id?u:c));setSelectedClient(u)}} onDelete={(id:string)=>{setClients((p:any)=>p.filter((c:any)=>c.id!==id));setSelectedClient(null)}} />}
       {showQuickAdd&&<MobileQuickAdd clients={clients} setClients={setClients} onClose={()=>setShowQuickAdd(false)} />}
       {showCardScan&&<MobileCardScan clients={clients} setClients={setClients} onClose={()=>setShowCardScan(false)} />}
+      {callMemo&&<CallMemoPopup client={callMemo} onClose={()=>setCallMemo(null)} />}
 
       {/* 상단 헤더 */}
       <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
@@ -1474,7 +1476,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       <div style={{padding:'16px 16px'}}>
         {page==='dashboard'&&<MobileDashboard clients={clients} schedules={schedules} weekSchedules={weekSchedules} setPage={setPage} onSelect={setSelectedClient} salesperson={salesperson} onQuickAdd={()=>setShowQuickAdd(true)} onCardScan={()=>setShowCardScan(true)} />}
         {page==='today'&&<MobileToday schedules={schedules} />}
-        {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} />}
+        {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} onCall={(c:any)=>{window.location.href=`tel:${c.phone.replace(/-/g,'')}`;setTimeout(()=>setCallMemo(c),3000)}} />}
         {page==='templates'&&<MobileTemplates templates={templates} setTemplates={setTemplates} />}
         {page==='more'&&<MobileMore salesperson={salesperson} setSalesperson={setSalesperson} user={user} partners={partners} setPartners={setPartners} signOut={signOut} setPage={setPage} />}
         {page==='calendar'&&<MobileCalendar setPage={setPage} />}
@@ -1607,6 +1609,54 @@ function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,sales
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+function CallMemoPopup({client,onClose}:any){
+  const supabase=createClient()
+  const [memo,setMemo]=useState('')
+  const [saving,setSaving]=useState(false)
+  const today=new Date().toISOString().split('T')[0]
+
+  const save=async()=>{
+    if(!memo.trim()){onClose();return}
+    setSaving(true)
+    await supabase.from('schedules').insert({
+      client_id:client.id,
+      type:'inspection',
+      scheduled_date:today,
+      is_contacted:true,
+      note:memo
+    })
+    setSaving(false)
+    onClose()
+  }
+
+  return(
+    <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.8)',display:'flex',alignItems:'flex-end',justifyContent:'center',zIndex:300}} onClick={onClose}>
+      <div style={{background:WHITE,borderRadius:'16px 16px 0 0',width:'100%',padding:'24px 20px 40px',boxShadow:'0 -8px 40px rgba(0,0,0,0.2)'}} onClick={e=>e.stopPropagation()}>
+        <div style={{width:40,height:4,background:BORDER,borderRadius:2,margin:'0 auto 20px'}} />
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+          <div style={av(NAVY)}>{client.name?.[0]||'?'}</div>
+          <div>
+            <div style={{fontSize:16,fontWeight:600,color:TX1}}>{client.name}</div>
+            <div style={{fontSize:12,color:TX3}}>📞 통화 완료 · {today}</div>
+          </div>
+        </div>
+        <div style={{fontSize:14,fontWeight:500,color:TX1,marginBottom:10}}>통화 내용 메모</div>
+        <textarea
+          style={{...inp,fontSize:15,height:120,resize:'none' as const,marginBottom:14}}
+          placeholder="통화 내용, 고객 반응, 다음 액션 등..."
+          value={memo}
+          onChange={e=>setMemo(e.target.value)}
+          autoFocus
+        />
+        <div style={{display:'flex',gap:10}}>
+          <button style={{...btn(),flex:1,padding:'14px',borderRadius:8,fontSize:15}} onClick={onClose}>건너뛰기</button>
+          <button style={{...btn('navy'),flex:2,padding:'14px',borderRadius:8,fontSize:15}} onClick={save} disabled={saving}>{saving?'저장중...':'메모 저장'}</button>
+        </div>
       </div>
     </div>
   )
@@ -1773,7 +1823,7 @@ function MobileToday({schedules}:any){
   )
 }
 
-function MobileClients({clients,setClients,onSelect}:any){
+function MobileClients({clients,setClients,onSelect,onCall}:any){
   const supabase=createClient()
   const [search,setSearch]=useState('')
   const [showAdd,setShowAdd]=useState(false)
@@ -1822,16 +1872,19 @@ function MobileClients({clients,setClients,onSelect}:any){
         {filtered.map((c:any,i:number)=>{
           const stg=getStage(c.stage||'first_visit')
           return(
-            <div key={c.id} style={{display:'flex',alignItems:'center',padding:'14px 16px',gap:12,borderBottom:i===filtered.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}} onClick={()=>onSelect(c)}>
-              <div style={{...av(NAVY),position:'relative'}}>
+            <div key={c.id} style={{display:'flex',alignItems:'center',padding:'14px 16px',gap:12,borderBottom:i===filtered.length-1?'none':`1px solid ${BORDER2}`}}>
+              <div style={{...av(NAVY),position:'relative',cursor:'pointer',flexShrink:0}} onClick={()=>onSelect(c)}>
                 {c.name?.[0]||'?'}
                 {c.is_vip&&<div style={{position:'absolute' as const,top:-3,right:-3,fontSize:9}}>⭐</div>}
               </div>
-              <div style={{flex:1}}>
+              <div style={{flex:1,cursor:'pointer'}} onClick={()=>onSelect(c)}>
                 <div style={{fontSize:15,fontWeight:500,color:TX1}}>{c.name}</div>
                 <div style={{fontSize:12,color:TX3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
               </div>
-              <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                {c.phone&&<button onClick={e=>{e.stopPropagation();onCall(c)}} style={{width:36,height:36,borderRadius:'50%',background:GREEN_BG,border:`1px solid ${GREEN_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>📞</button>}
+                <span style={badge(stg.color,stg.bg,stg.bd)} onClick={()=>onSelect(c)}>{stg.label}</span>
+              </div>
             </div>
           )
         })}
