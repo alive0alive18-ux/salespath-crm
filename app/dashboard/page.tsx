@@ -474,7 +474,7 @@ export default function Home(){
     {id:'partners',label:'제휴업체'},
     {id:'calendar',label:'캘린더'},
     {id:'report',label:'실적 리포트'},
-    {id:'import',label:'📥 연락처 불러오기'},
+    {id:'import',label:'연락처 불러오기'},
     {id:'profile',label:'프로필 설정'},
   ]
 
@@ -503,9 +503,9 @@ export default function Home(){
         </div>
         <div style={{paddingTop:8,flex:1}}>
           {nav.map(n=>(
-            <div key={n.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 22px',fontSize:13,color:page===n.id?CREAM:NAVY3,background:page===n.id?NAVY2:'transparent',borderLeft:page===n.id?`2px solid ${GOLD}`:'2px solid transparent',cursor:'pointer',fontWeight:page===n.id?500:400,transition:'all .12s',userSelect:'none',letterSpacing:'.02em'}} onClick={()=>setPage(n.id)}>
+            <div key={n.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'13px 22px',fontSize:14,color:page===n.id?CREAM:NAVY3,background:page===n.id?NAVY2:'transparent',borderLeft:page===n.id?`2px solid ${GOLD}`:'2px solid transparent',cursor:'pointer',fontWeight:page===n.id?600:400,transition:'all .12s',userSelect:'none',letterSpacing:'.01em'}} onClick={()=>setPage(n.id)}>
               {n.label}
-              {n.id==='today'&&schedules.length>0&&<span style={{fontSize:10,background:GOLD,color:NAVY,padding:'1px 7px',borderRadius:2,fontWeight:700}}>{schedules.length}</span>}
+              {n.id==='today'&&schedules.length>0&&<span style={{fontSize:11,background:GOLD,color:NAVY,padding:'2px 8px',borderRadius:2,fontWeight:700}}>{schedules.length}</span>}
             </div>
           ))}
         </div>
