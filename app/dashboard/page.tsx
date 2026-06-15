@@ -65,6 +65,27 @@ const card={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflo
 const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:14,fontWeight:600,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
 const row={display:'flex',alignItems:'center',padding:'15px 20px',borderBottom:`1px solid ${BORDER2}`,gap:12}
 
+function getGoldenTiming(client:any){
+  if(!client.delivery_date) return null
+  const delivery = new Date(client.delivery_date)
+  const now = new Date()
+  const months = (now.getFullYear()-delivery.getFullYear())*12 + (now.getMonth()-delivery.getMonth())
+  
+  // 리스/렌트는 24개월, 36개월 만기
+  const purchaseType = client.purchase_type
+  
+  if(purchaseType==='리스'||purchaseType==='렌트'){
+    if(months>=22&&months<=24) return {label:'🎯 리스 만기 임박!',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0',msg:'리스 만기가 다가오고 있어요. 재계약 상담 지금이 최적!'}
+    if(months>=34&&months<=36) return {label:'🎯 렌트 만기 임박!',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0',msg:'렌트 만기가 다가오고 있어요. 재계약 상담 지금이 최적!'}
+  }
+  
+  if(months>=30&&months<=32) return {label:'⭐ 교체 황금기!',color:'#C9A84C',bg:'#FBF6E8',bd:'#C9A84C60',msg:'인도 후 2년 6개월! 슬슬 새 차 생각할 시기예요.'}
+  if(months>=23&&months<=25) return {label:'🔔 교체 검토 시기',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A',msg:'인도 후 2년! 슬슬 다음 차 얘기 꺼내보세요.'}
+  if(months>=11&&months<=12) return {label:'📅 1년 기념일',color:'#1D4ED8',bg:'#EFF6FF',bd:'#BFDBFE',msg:'인도 1주년이에요! 감사 연락 좋은 타이밍이에요.'}
+  
+  return null
+}
+
 function getTemperature(client:any){
   const memo = (client.memo||'').toLowerCase()
   const note = (client.interest_model||'') + (client.competitor||'')
@@ -635,6 +656,32 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
           </div>
         </div>
       </div>
+
+      {(()=>{
+        const goldenClients=clients.filter((c:any)=>getGoldenTiming(c))
+        if(goldenClients.length===0) return null
+        return(
+          <div style={card}>
+            <div style={cardH}>
+              <span>⭐ 황금 연락 타이밍</span>
+              <span style={{fontSize:12,color:GOLD}}>{goldenClients.length}명</span>
+            </div>
+            {goldenClients.map((c:any,i:number)=>{
+              const timing=getGoldenTiming(c)!
+              return(
+                <div key={c.id} style={{...row,borderBottom:i===goldenClients.length-1?'none':`1px solid ${BORDER2}`}}>
+                  <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:500,color:TX1,marginBottom:3}}>{c.name}</div>
+                    <div style={{fontSize:11,color:TX3,marginBottom:4}}>{timing.msg}</div>
+                    <span style={badge(timing.color,timing.bg,timing.bd)}>{timing.label}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       <div style={card}>
         <div style={cardH}>
@@ -1627,6 +1674,33 @@ function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,sales
         </div>
       </div>
 
+      {/* 황금 연락 타이밍 */}
+      {(()=>{
+        const goldenClients=clients.filter((c:any)=>getGoldenTiming(c))
+        if(goldenClients.length===0) return null
+        return(
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',marginBottom:14}}>
+            <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER2}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <span style={{fontSize:13,fontWeight:600,color:TX1}}>⭐ 황금 연락 타이밍</span>
+              <span style={{fontSize:12,color:GOLD}}>{goldenClients.length}명</span>
+            </div>
+            {goldenClients.map((c:any,i:number)=>{
+              const timing=getGoldenTiming(c)!
+              return(
+                <div key={c.id} style={{display:'flex',alignItems:'center',padding:'12px 16px',gap:10,borderBottom:i===goldenClients.length-1?'none':`1px solid ${BORDER2}`}}>
+                  <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
+                    <div style={{fontSize:11,color:TX3,marginBottom:3}}>{timing.msg}</div>
+                    <span style={{...badge(timing.color,timing.bg,timing.bd),fontSize:10}}>{timing.label}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
+
       {/* 오늘 연락 리스트 */}
       {schedules.length>0&&(
         <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',marginBottom:14}}>
@@ -2121,7 +2195,10 @@ function MobileClients({clients,setClients,onSelect,onCall,onSms}:any){
               <div style={{flex:1,cursor:'pointer'}} onClick={()=>onSelect(c)}>
                 <div style={{fontSize:15,fontWeight:500,color:TX1}}>{c.name}</div>
                 <div style={{fontSize:12,color:TX3,marginBottom:3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
-                <span style={{...badge(getTemperature(c).color,getTemperature(c).bg,getTemperature(c).bd),fontSize:10}}>{getTemperature(c).label}</span>
+                <div style={{display:'flex',gap:4,flexWrap:'wrap' as const}}>
+                  <span style={{...badge(getTemperature(c).color,getTemperature(c).bg,getTemperature(c).bd),fontSize:10}}>{getTemperature(c).label}</span>
+                  {getGoldenTiming(c)&&<span style={{...badge(getGoldenTiming(c)!.color,getGoldenTiming(c)!.bg,getGoldenTiming(c)!.bd),fontSize:10}}>{getGoldenTiming(c)!.label}</span>}
+                </div>
               </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
                 {c.phone&&<button onClick={e=>{e.stopPropagation();onCall(c)}} style={{width:36,height:36,borderRadius:'50%',background:GREEN_BG,border:`1px solid ${GREEN_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>📞</button>}
