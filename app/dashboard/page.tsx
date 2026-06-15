@@ -65,64 +65,6 @@ const card={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflo
 const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:14,fontWeight:600,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
 const row={display:'flex',alignItems:'center',padding:'15px 20px',borderBottom:`1px solid ${BORDER2}`,gap:12}
 
-function getChecklist(client:any){
-  return [
-    {id:'first_visit', label:'첫 방문 상담', done:!!client.consultation_date},
-    {id:'test_drive',  label:'시승 완료',    done:client.stage==='test_drive'||client.stage==='quote'||client.stage==='contract'||client.stage==='delivered'},
-    {id:'quote',       label:'견적 제출',    done:client.stage==='quote'||client.stage==='contract'||client.stage==='delivered'},
-    {id:'finance',     label:'금융 상담',    done:!!client.purchase_type},
-    {id:'color',       label:'색상 결정',    done:!!client.car_color},
-    {id:'contract',    label:'계약 완료',    done:client.stage==='contract'||client.stage==='delivered'},
-    {id:'delivered',   label:'출고 완료',    done:client.stage==='delivered'},
-  ]
-}
-
-function getGoldenTiming(client:any){
-  if(!client.delivery_date) return null
-  const delivery = new Date(client.delivery_date)
-  const now = new Date()
-  const months = (now.getFullYear()-delivery.getFullYear())*12 + (now.getMonth()-delivery.getMonth())
-  
-  // 리스/렌트는 24개월, 36개월 만기
-  const purchaseType = client.purchase_type
-  
-  if(purchaseType==='리스'||purchaseType==='렌트'){
-    if(months>=22&&months<=24) return {label:'🎯 리스 만기 임박!',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0',msg:'리스 만기가 다가오고 있어요. 재계약 상담 지금이 최적!'}
-    if(months>=34&&months<=36) return {label:'🎯 렌트 만기 임박!',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0',msg:'렌트 만기가 다가오고 있어요. 재계약 상담 지금이 최적!'}
-  }
-  
-  if(months>=30&&months<=32) return {label:'⭐ 교체 황금기!',color:'#C9A84C',bg:'#FBF6E8',bd:'#C9A84C60',msg:'인도 후 2년 6개월! 슬슬 새 차 생각할 시기예요.'}
-  if(months>=23&&months<=25) return {label:'🔔 교체 검토 시기',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A',msg:'인도 후 2년! 슬슬 다음 차 얘기 꺼내보세요.'}
-  if(months>=11&&months<=12) return {label:'📅 1년 기념일',color:'#1D4ED8',bg:'#EFF6FF',bd:'#BFDBFE',msg:'인도 1주년이에요! 감사 연락 좋은 타이밍이에요.'}
-  
-  return null
-}
-
-function getTemperature(client:any){
-  const memo = (client.memo||'').toLowerCase()
-  const note = (client.interest_model||'') + (client.competitor||'')
-  
-  // 🔥 HOT 키워드
-  const hotWords = ['다음 주','이번 주','곧','빨리','결정','계약','오겠다','연락 주세요','할게요','사겠','좋아요','마음에','확정']
-  // 🌡️ WARM 키워드  
-  const warmWords = ['생각','고려','검토','비교','알아보','관심','시승','견적']
-  // ❄️ COLD 키워드
-  const coldWords = ['가격 부담','비싸','어렵','모르겠','아직','나중에','천천히','부담']
-
-  const text = memo + note
-  
-  if(hotWords.some(w=>text.includes(w))) return {label:'🔥 HOT',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0'}
-  if(coldWords.some(w=>text.includes(w))) return {label:'❄️ 관망',color:'#1D4ED8',bg:'#EFF6FF',bd:'#BFDBFE'}
-  if(warmWords.some(w=>text.includes(w))) return {label:'🌡️ 관심',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A'}
-  
-  // 단계별 기본 온도
-  if(client.stage==='contract'||client.stage==='delivered') return {label:'🔥 HOT',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0'}
-  if(client.stage==='quote') return {label:'🌡️ 관심',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A'}
-  if(client.stage==='test_drive') return {label:'🌡️ 관심',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A'}
-  
-  return {label:'😐 보통',color:'#888888',bg:'#F5F5F5',bd:'#DDD'}
-}
-
 function getLabel(note:string){
   if(note?.includes('감사')) return {label:'감사문자',color:GREEN,bg:GREEN_BG,bd:GREEN_BD}
   if(note?.includes('1년')) return {label:'1년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD}
@@ -194,7 +136,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
     onDelete(client.id);onClose()
   }
 
-  const tabs=[{id:'info',l:'기본 정보'},{id:'vehicle',l:'차량 정보'},{id:'checklist',l:'체크리스트'},{id:'history',l:'연락 히스토리'},{id:'estimates',l:'견적서'}]
+  const tabs=[{id:'info',l:'기본 정보'},{id:'vehicle',l:'차량 정보'},{id:'history',l:'연락 히스토리'},{id:'estimates',l:'견적서'}]
   const stg=getStage(client.stage||'first_visit')
 
   return(
@@ -329,46 +271,6 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
               {!client.delivery_date&&<div style={{padding:'14px 22px',background:GOLD_BG,borderTop:`1px solid ${BORDER}`}}><div style={{fontSize:13,color:GOLD_TX}}>💡 차량 인도일을 입력하면 감사문자·정기점검 알림이 자동 생성돼요!</div></div>}
             </div>
           ))}
-          {tab==='checklist'&&(
-            <div>
-              <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
-                {getChecklist(client).map((item,i,arr)=>(
-                  <div key={item.id} style={{display:'flex',alignItems:'center',gap:14,padding:'16px 22px',borderBottom:i===arr.length-1?'none':`1px solid ${BORDER2}`,opacity:item.done?1:0.6}}>
-                    <div style={{width:28,height:28,borderRadius:'50%',background:item.done?GREEN:BORDER,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}>
-                      <span style={{color:WHITE,fontSize:14,fontWeight:700}}>{item.done?'✓':''}</span>
-                    </div>
-                    <div style={{flex:1}}>
-                      <div style={{fontSize:14,fontWeight:500,color:item.done?TX1:TX3}}>{item.label}</div>
-                    </div>
-                    <span style={{fontSize:12,color:item.done?GREEN:TX3,fontWeight:600}}>{item.done?'완료':'미완료'}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,padding:'16px 22px'}}>
-                <div style={{fontSize:13,fontWeight:600,color:TX1,marginBottom:10}}>진행률</div>
-                <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                  <span style={{fontSize:13,color:TX2}}>계약까지</span>
-                  <span style={{fontSize:13,fontWeight:600,color:TX1}}>
-                    {getChecklist(client).filter(c=>c.done).length} / {getChecklist(client).length}
-                  </span>
-                </div>
-                <div style={{height:8,background:BORDER,borderRadius:4}}>
-                  <div style={{
-                    height:8,
-                    width:`${Math.round(getChecklist(client).filter(c=>c.done).length/getChecklist(client).length*100)}%`,
-                    background:getChecklist(client).filter(c=>c.done).length===getChecklist(client).length?GREEN:GOLD,
-                    borderRadius:4,transition:'width .3s'
-                  }} />
-                </div>
-                <div style={{fontSize:12,color:TX3,marginTop:8}}>
-                  {getChecklist(client).filter(c=>c.done).length===getChecklist(client).length
-                    ?'🎉 모든 단계 완료!'
-                    :`다음 단계: ${getChecklist(client).find(c=>!c.done)?.label}`}
-                </div>
-              </div>
-            </div>
-          )}
-
           {tab==='history'&&(
             <div>
               <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,padding:20,marginBottom:16}}>
@@ -492,6 +394,23 @@ export default function Home(){
 
   const signOut=async()=>{await supabase.auth.signOut();router.push('/login')}
 
+  const startDuty=async()=>{
+    const{data:{user:u}}=await supabase.auth.getUser()
+    if(!u) return
+    await supabase.from('salespersons').update({is_on_duty:true,duty_start:new Date().toISOString()}).eq('id',u.id)
+    setIsOnDuty(true)
+  }
+
+  const endDuty=async()=>{
+    const{data:{user:u}}=await supabase.auth.getUser()
+    if(!u) return
+    const today=new Date().toISOString().split('T')[0]
+    const{data}=await supabase.from('clients').select('*').eq('duty_date',today).eq('salesperson_id',u.id)
+    setDutyClients(data||[])
+    await supabase.from('salespersons').update({is_on_duty:false,duty_start:null}).eq('id',u.id)
+    setIsOnDuty(false)
+    setShowDutySummary(true)
+  }
 
   const nav=[
     {id:'dashboard',label:'대시보드'},
@@ -501,7 +420,6 @@ export default function Home(){
     {id:'partners',label:'제휴업체'},
     {id:'calendar',label:'캘린더'},
     {id:'report',label:'실적 리포트'},
-    {id:'import',label:'📥 연락처 불러오기'},
     {id:'profile',label:'프로필 설정'},
   ]
 
@@ -551,7 +469,6 @@ export default function Home(){
         {page==='calendar'&&<Calendar />}
         {page==='report'&&<Report clients={clients} />}
         {page==='profile'&&<Profile salesperson={salesperson} setSalesperson={setSalesperson} user={user} />}
-        {page==='import'&&<ImportContacts setClients={setClients} user={user} />}
       </main>
     </div>
   )
@@ -616,7 +533,7 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
         {[
           {l:'전체 고객',v:clients.length,s:`이번달 +${thisMonth.length}명`,vc:TX1},
           {l:'오늘 연락',v:schedules.length,s:'미완료',vc:schedules.length>0?GOLD:TX1},
-          {l:'🔥 HOT 고객',v:clients.filter((c:any)=>getTemperature(c).label.includes('HOT')).length,s:'계약 임박',vc:RED},
+          {l:'계약·출고',v:contracted.length,s:'이번달',vc:contracted.length>0?GREEN:TX1},
           {l:'VIP 고객',v:vipClients.length,s:'⭐ 관리 중',vc:vipClients.length>0?AMBER:TX1},
         ].map((s,i)=>(
           <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px'}}>
@@ -694,32 +611,6 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
         </div>
       </div>
 
-      {(()=>{
-        const goldenClients=clients.filter((c:any)=>getGoldenTiming(c))
-        if(goldenClients.length===0) return null
-        return(
-          <div style={card}>
-            <div style={cardH}>
-              <span>⭐ 황금 연락 타이밍</span>
-              <span style={{fontSize:12,color:GOLD}}>{goldenClients.length}명</span>
-            </div>
-            {goldenClients.map((c:any,i:number)=>{
-              const timing=getGoldenTiming(c)!
-              return(
-                <div key={c.id} style={{...row,borderBottom:i===goldenClients.length-1?'none':`1px solid ${BORDER2}`}}>
-                  <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:500,color:TX1,marginBottom:3}}>{c.name}</div>
-                    <div style={{fontSize:11,color:TX3,marginBottom:4}}>{timing.msg}</div>
-                    <span style={badge(timing.color,timing.bg,timing.bd)}>{timing.label}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )
-      })()}
-
       <div style={card}>
         <div style={cardH}>
           <span>계약 단계별 현황</span>
@@ -758,12 +649,9 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
                     <div style={{fontSize:12,color:TX3}}>{c.phone||'—'}</div>
                   </div>
                 </div>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                   <span style={{fontSize:12,color:TX2}}>{c.car_model||'차량 미등록'}</span>
                   <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
-                </div>
-                <div style={{height:3,background:BORDER,borderRadius:2}}>
-                  <div style={{height:3,width:`${Math.round(getChecklist(c).filter((item:any)=>item.done).length/getChecklist(c).length*100)}%`,background:GOLD,borderRadius:2}} />
                 </div>
               </div>
             )
@@ -929,10 +817,7 @@ function Clients({clients,setClients,onSelect}:any){
               </div>
               <span style={{fontSize:13,color:TX2}}>{c.interest_model||c.car_model||'—'}</span>
               <span style={{fontSize:13,color:TX3}}>{c.consultation_date||c.delivery_date||'—'}</span>
-              <div style={{display:'flex',flexDirection:'column' as const,gap:4}}>
-                <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
-                <span style={{...badge(getTemperature(c).color,getTemperature(c).bg,getTemperature(c).bd),fontSize:10}}>{getTemperature(c).label}</span>
-              </div>
+              <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
               <button style={btn('sm')} onClick={e=>{e.stopPropagation();onSelect(c)}}>상세 →</button>
             </div>
           )
@@ -1454,113 +1339,6 @@ function Report({clients}:any){
   )
 }
 
-function ImportContacts({setClients,user}:any){
-  const [importing,setImporting]=useState(false)
-  const [result,setResult]=useState<any>(null)
-  const [preview,setPreview]=useState<any[]>([])
-  const [error,setError]=useState('')
-
-  const handleFile=async(e:React.ChangeEvent<HTMLInputElement>)=>{
-    const file=e.target.files?.[0]
-    if(!file) return
-    setImporting(true);setError('');setResult(null)
-    const ext=file.name.split('.').pop()?.toLowerCase()
-    const reader=new FileReader()
-    reader.onload=async()=>{
-      const content=reader.result as string
-      const fileType=ext==='vcf'?'vcf':'csv'
-      try{
-        const res=await fetch('/api/import-contacts',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({fileContent:content,fileType,userId:user?.id})
-        })
-        const data=await res.json()
-        if(data.error) setError(data.error)
-        else{setResult(data);setPreview(data.contacts||[])}
-      }catch(e:any){setError('파일 처리 중 오류가 발생했어요')}
-      setImporting(false)
-    }
-    reader.readAsText(file,'UTF-8')
-  }
-
-  return(
-    <div>
-      <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>📥 연락처 불러오기</div>
-      <div style={{fontSize:13,color:TX3,marginBottom:24}}>아이폰·안드로이드 연락처를 한번에 가져오세요</div>
-
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-        {[
-          {icon:'🍎',title:'아이폰',desc:'iCloud.com → 연락처 → 내보내기 → .vcf 저장'},
-          {icon:'🤖',title:'삼성 갤럭시',desc:'연락처 앱 → 설정 → 연락처 내보내기 → .vcf'},
-          {icon:'📊',title:'엑셀/CSV',desc:'이름, 전화번호 컬럼으로 저장 후 업로드'},
-        ].map((f,i)=>(
-          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'16px'}}>
-            <div style={{fontSize:28,marginBottom:8}}>{f.icon}</div>
-            <div style={{fontSize:13,fontWeight:600,color:TX1,marginBottom:4}}>{f.title}</div>
-            <div style={{fontSize:11,color:TX3,lineHeight:1.5}}>{f.desc}</div>
-          </div>
-        ))}
-      </div>
-
-      {!result&&(
-        <label style={{display:'flex',flexDirection:'column' as const,alignItems:'center',justifyContent:'center',gap:12,padding:'48px 32px',border:`2px dashed ${GOLD}`,borderRadius:12,cursor:'pointer',background:GOLD_BG,marginBottom:16}}>
-          {importing?(
-            <div style={{textAlign:'center' as const}}>
-              <div style={{fontSize:32,marginBottom:8}}>⏳</div>
-              <div style={{fontSize:15,color:GOLD_TX,fontWeight:600}}>연락처 불러오는 중...</div>
-            </div>
-          ):(
-            <>
-              <div style={{fontSize:48}}>📂</div>
-              <div style={{fontSize:16,fontWeight:600,color:GOLD_TX}}>파일 선택하기</div>
-              <div style={{fontSize:13,color:TX3}}>.vcf / .csv 파일 지원</div>
-            </>
-          )}
-          <input type="file" accept=".vcf,.csv" style={{display:'none'}} onChange={handleFile} disabled={importing} />
-        </label>
-      )}
-
-      {error&&<div style={{background:'#FFF5F5',border:'1px solid #FFC0C0',borderRadius:8,padding:'14px 18px',marginBottom:16,color:RED,fontSize:14}}>⚠️ {error}</div>}
-
-      {result&&(
-        <div>
-          <div style={{background:GREEN_BG,border:`1px solid ${GREEN_BD}`,borderRadius:8,padding:'16px 20px',marginBottom:16}}>
-            <div style={{fontSize:16,fontWeight:600,color:GREEN,marginBottom:4}}>🎉 불러오기 완료!</div>
-            <div style={{fontSize:14,color:GREEN}}>{result.count}명의 연락처가 등록됐어요</div>
-          </div>
-          <div style={card}>
-            <div style={cardH}><span>등록된 연락처 미리보기 (최대 5명)</span></div>
-            {preview.map((c:any,i:number)=>(
-              <div key={i} style={{...row,borderBottom:i===preview.length-1?'none':`1px solid ${BORDER2}`}}>
-                <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
-                  <div style={{fontSize:12,color:TX3}}>{c.phone||'전화번호 없음'} {c.email?`· ${c.email}`:''}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button onClick={()=>{setResult(null);setPreview([])}} style={{...btn('navy'),marginTop:12}}>추가로 더 불러오기</button>
-        </div>
-      )}
-
-      <div style={{...card,marginTop:16}}>
-        <div style={cardH}><span>📋 엑셀 양식 다운로드</span></div>
-        <div style={{padding:'16px 20px'}}>
-          <div style={{fontSize:13,color:TX2,marginBottom:12}}>엑셀로 고객을 일괄 등록하고 싶으면 아래 양식을 사용해주세요.</div>
-          <button onClick={()=>{
-            const csv=['이름,전화번호,이메일,주소,메모','홍길동,010-1234-5678,hong@email.com,서울시 강남구,VIP 고객'].join('\n')
-            const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})
-            const url=URL.createObjectURL(blob)
-            const a=document.createElement('a');a.href=url;a.download='salespath_고객등록양식.csv';a.click()
-          }} style={btn()}>📥 엑셀 양식 다운로드</button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function Profile({salesperson,setSalesperson,user}:any){
   const supabase=createClient()
   const [form,setForm]=useState({
@@ -1672,24 +1450,6 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
   const [showDutySummary,setShowDutySummary]=useState(false)
   const [dutyClients,setDutyClients]=useState<any[]>([])
 
-  const startDuty=async()=>{
-    const{data:{user:u}}=await supabase.auth.getUser()
-    if(!u) return
-    await supabase.from('salespersons').update({is_on_duty:true,duty_start:new Date().toISOString()}).eq('id',u.id)
-    setIsOnDuty(true)
-  }
-
-  const endDuty=async()=>{
-    const{data:{user:u}}=await supabase.auth.getUser()
-    if(!u) return
-    const today=new Date().toISOString().split('T')[0]
-    const{data}=await supabase.from('clients').select('*').eq('duty_date',today).eq('salesperson_id',u.id)
-    setDutyClients(data||[])
-    await supabase.from('salespersons').update({is_on_duty:false,duty_start:null}).eq('id',u.id)
-    setIsOnDuty(false)
-    setShowDutySummary(true)
-  }
-
   const tabs=[
     {id:'dashboard',icon:'🏠',label:'홈'},
     {id:'today',icon:'📋',label:'오늘'},
@@ -1755,7 +1515,6 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
         {page==='calendar'&&<MobileCalendar setPage={setPage} />}
         {page==='report'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>실적 리포트</div></div><Report clients={clients} /></div>}
         {page==='partners'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>제휴업체</div></div><Partners partners={partners} setPartners={setPartners} /></div>}
-        {page==='import'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>연락처 불러오기</div></div><ImportContacts setClients={setClients} user={user} /></div>}
       </div>
 
       {/* 하단 탭바 */}
@@ -1839,33 +1598,6 @@ function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,sales
           })}
         </div>
       </div>
-
-      {/* 황금 연락 타이밍 */}
-      {(()=>{
-        const goldenClients=clients.filter((c:any)=>getGoldenTiming(c))
-        if(goldenClients.length===0) return null
-        return(
-          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',marginBottom:14}}>
-            <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER2}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-              <span style={{fontSize:13,fontWeight:600,color:TX1}}>⭐ 황금 연락 타이밍</span>
-              <span style={{fontSize:12,color:GOLD}}>{goldenClients.length}명</span>
-            </div>
-            {goldenClients.map((c:any,i:number)=>{
-              const timing=getGoldenTiming(c)!
-              return(
-                <div key={c.id} style={{display:'flex',alignItems:'center',padding:'12px 16px',gap:10,borderBottom:i===goldenClients.length-1?'none':`1px solid ${BORDER2}`}}>
-                  <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
-                    <div style={{fontSize:11,color:TX3,marginBottom:3}}>{timing.msg}</div>
-                    <span style={{...badge(timing.color,timing.bg,timing.bd),fontSize:10}}>{timing.label}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )
-      })()}
 
       {/* 오늘 연락 리스트 */}
       {schedules.length>0&&(
@@ -2360,15 +2092,12 @@ function MobileClients({clients,setClients,onSelect,onCall,onSms}:any){
               </div>
               <div style={{flex:1,cursor:'pointer'}} onClick={()=>onSelect(c)}>
                 <div style={{fontSize:15,fontWeight:500,color:TX1}}>{c.name}</div>
-                <div style={{fontSize:12,color:TX3,marginBottom:3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
-                <div style={{display:'flex',gap:4,flexWrap:'wrap' as const}}>
-                  <span style={{...badge(getTemperature(c).color,getTemperature(c).bg,getTemperature(c).bd),fontSize:10}}>{getTemperature(c).label}</span>
-                  {getGoldenTiming(c)&&<span style={{...badge(getGoldenTiming(c)!.color,getGoldenTiming(c)!.bg,getGoldenTiming(c)!.bd),fontSize:10}}>{getGoldenTiming(c)!.label}</span>}
-                </div>
+                <div style={{fontSize:12,color:TX3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
               </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
                 {c.phone&&<button onClick={e=>{e.stopPropagation();onCall(c)}} style={{width:36,height:36,borderRadius:'50%',background:GREEN_BG,border:`1px solid ${GREEN_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>📞</button>}
                 {c.phone&&<button onClick={e=>{e.stopPropagation();onSms(c)}} style={{width:36,height:36,borderRadius:'50%',background:BLUE_BG,border:`1px solid ${BLUE_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>✉️</button>}
+                <span style={badge(stg.color,stg.bg,stg.bd)} onClick={()=>onSelect(c)}>{stg.label}</span>
               </div>
             </div>
           )
@@ -2633,7 +2362,6 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
     {id:'calendar',icon:'📅',label:'캘린더'},
     {id:'report',icon:'📊',label:'실적 리포트'},
     {id:'partners',icon:'🤝',label:'제휴업체'},
-    {id:'import',icon:'📥',label:'연락처 불러오기'},
   ]
 
   if(section==='profile') return(
@@ -2664,7 +2392,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
       <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
         {menus.map((m,i)=>(
           <div key={m.id} style={{display:'flex',alignItems:'center',padding:'16px',gap:14,borderBottom:i===menus.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}}
-            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'||m.id==='import'?setPage(m.id):setSection(m.id)}>
+            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'?setPage(m.id):setSection(m.id)}>
             <span style={{fontSize:22}}>{m.icon}</span>
             <span style={{fontSize:15,color:TX1,fontWeight:500}}>{m.label}</span>
             <span style={{marginLeft:'auto',color:TX3,fontSize:16}}>›</span>
