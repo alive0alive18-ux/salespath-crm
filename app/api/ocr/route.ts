@@ -21,40 +21,47 @@ export async function POST(request: Request) {
   const text = data.responses?.[0]?.fullTextAnnotation?.text || ''
   const lines = text.split('\n').map((l:string) => l.trim()).filter((l:string) => l)
 
-  // 전화번호 추출
-  const phoneMatch = text.match(/(\d{2,3}[-.\s]?\d{3,4}[-.\s]?\d{4})/)
-  const phone = phoneMatch ? phoneMatch[0].replace(/[-.\s]/g,'').replace(/(\d{3})(\d{3,4})(\d{4})/,'$1-$2-$3') : ''
+  // 전화번호 추출 (+8210 → 010 자동변환)
+  const phoneMatch = text.match(/(\+82[-.\s]?10[-.\s]?\d{3,4}[-.\s]?\d{4}|010[-.\s]?\d{3,4}[-.\s]?\d{4})/)
+  let phone = ''
+  if(phoneMatch) {
+    phone = phoneMatch[0].replace(/[-.\s]/g,'')
+    phone = phone.replace(/^\+8210/, '010')
+    phone = phone.replace(/(\d{3})(\d{3,4})(\d{4})/, '$1-$2-$3')
+  }
 
   // 이메일 추출
   const emailMatch = text.match(/[\w.+-]+@[\w.-]+\.\w+/)
   const email = emailMatch ? emailMatch[0] : ''
 
-  // 이름 추출 (한글 2-4글자 or 영문 이름 패턴)
+  // 한글 이름 추출 (2-4글자)
   let name = ''
   for(const line of lines) {
-    const koreanName = line.match(/^[가-힣]{2,4}$/)
-    const englishName = line.match(/^[A-Z][a-z]+ [A-Z][a-z]+$/)
-    if(koreanName || englishName) {
-      name = line
-      break
+    if(line.match(/^[가-힣]{2,4}$/)) { name = line; break }
+  }
+  // 한글 이름 없으면 영문 이름 찾아서 번역 API 호출
+  if(!name) {
+    for(const line of lines) {
+      if(line.match(/^[A-Z][a-z]+ [A-Z][a-z]+$/) || line.match(/^[A-Z][A-Z ]+$/)) {
+        name = line; break
+      }
     }
   }
-  // 이름 못 찾으면 첫 번째 짧은 줄
   if(!name) {
-    name = lines.find((l:string) => l.length <= 10 && !l.includes('@') && !l.match(/\d{4}/)) || lines[0] || ''
+    name = lines.find((l:string) => l.length <= 10 && !l.includes('@') && !l.match(/\d{3}/) && !l.includes('.')) || lines[0] || ''
   }
 
-  // 회사명 추출 (주식회사, ㈜, Corp, Inc 등 포함된 줄)
-  const companyMatch = lines.find((l:string) =>
-    l.includes('주식회사') || l.includes('㈜') || l.includes('Corp') ||
-    l.includes('Inc') || l.includes('Co.,') || l.includes('그룹') || l.includes('기업')
+  // 주소 추출
+  const addressMatch = lines.find((l:string) =>
+    l.includes('시') || l.includes('구') || l.includes('동') ||
+    l.includes('로') || l.includes('길') || l.includes('층')
   )
 
   return NextResponse.json({
     name: name.trim(),
     phone,
     email,
-    company: companyMatch || '',
+    address: addressMatch || '',
     raw: text
   })
 }

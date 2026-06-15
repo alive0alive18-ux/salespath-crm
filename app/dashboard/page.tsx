@@ -1589,41 +1589,51 @@ function MobileCardScan({clients,setClients,onClose}:any){
   const [scanning,setScanning]=useState(false)
   const [result,setResult]=useState<any>(null)
   const [saving,setSaving]=useState(false)
-  const [form,setForm]=useState({name:'',phone:'',email:'',memo:''})
+  const [form,setForm]=useState({name:'',phone:'',email:'',address:'',interest_model:'',memo:'',stage:'first_visit'})
 
   const scanCard=async(e:React.ChangeEvent<HTMLInputElement>)=>{
     const file=e.target.files?.[0];if(!file) return
     setScanning(true)
     const reader=new FileReader()
     reader.onload=async()=>{
-      const base64=( reader.result as string).split(',')[1]
+      const base64=(reader.result as string).split(',')[1]
       const res=await fetch('/api/ocr',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:base64})})
       const data=await res.json()
-      setForm({name:data.name||'',phone:data.phone||'',email:data.email||'',memo:''})
+      setForm(p=>({...p,name:data.name||'',phone:data.phone||'',email:data.email||'',address:data.address||''}))
       setResult(data)
       setScanning(false)
     }
     reader.readAsDataURL(file)
   }
 
+  const rescan=()=>{setResult(null);setForm({name:'',phone:'',email:'',address:'',interest_model:'',memo:'',stage:'first_visit'})}
+
   const save=async()=>{
     if(!form.name) return;setSaving(true)
     const{data:{user}}=await supabase.auth.getUser()
-    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,email:form.email||null,memo:form.memo||null,stage:'first_visit'}).select()
+    const{data}=await supabase.from('clients').insert({
+      salesperson_id:user?.id,name:form.name,phone:form.phone||null,
+      email:form.email||null,address:form.address||null,
+      interest_model:form.interest_model||null,
+      memo:form.memo||null,stage:form.stage
+    }).select()
     if(data) setClients((p:any)=>[data[0],...p])
     onClose()
   }
 
   return(
     <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.8)',display:'flex',alignItems:'flex-end',justifyContent:'center',zIndex:200}} onClick={onClose}>
-      <div style={{background:WHITE,borderRadius:'16px 16px 0 0',width:'100%',padding:'24px 20px 40px',boxShadow:'0 -8px 40px rgba(0,0,0,0.2)'}} onClick={e=>e.stopPropagation()}>
+      <div style={{background:WHITE,borderRadius:'16px 16px 0 0',width:'100%',maxHeight:'90vh',overflowY:'auto' as const,padding:'24px 20px 40px',boxShadow:'0 -8px 40px rgba(0,0,0,0.2)'}} onClick={e=>e.stopPropagation()}>
         <div style={{width:40,height:4,background:BORDER,borderRadius:2,margin:'0 auto 20px'}} />
-        <div style={{fontSize:17,fontWeight:600,color:TX1,marginBottom:20}}>📷 명함 촬영으로 고객 등록</div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+          <div style={{fontSize:17,fontWeight:600,color:TX1}}>📷 명함 촬영으로 고객 등록</div>
+          {result&&<button style={{...btn(),fontSize:12,padding:'5px 10px'}} onClick={rescan}>다시 촬영</button>}
+        </div>
 
         {!result&&(
           <label style={{display:'flex',flexDirection:'column' as const,alignItems:'center',justifyContent:'center',gap:10,padding:'32px',border:`2px dashed ${GOLD}`,borderRadius:12,cursor:'pointer',marginBottom:16,background:GOLD_BG}}>
             {scanning?(
-              <div style={{fontSize:14,color:GOLD_TX}}>🔍 명함 인식 중...</div>
+              <div style={{fontSize:14,color:GOLD_TX,textAlign:'center' as const}}>🔍 명함 인식 중...<br/><span style={{fontSize:12}}>잠시만 기다려주세요</span></div>
             ):(
               <>
                 <div style={{fontSize:40}}>📷</div>
@@ -1640,10 +1650,27 @@ function MobileCardScan({clients,setClients,onClose}:any){
             <div style={{background:GREEN_BG,border:`1px solid ${GREEN_BD}`,borderRadius:8,padding:'10px 14px',fontSize:13,color:GREEN}}>
               ✓ 명함 인식 완료! 정보를 확인하고 수정해주세요
             </div>
-            <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} value={form.phone} onChange={e=>setForm(p=>({...p,phone:e.target.value}))} /></div>
-            <div><label style={lbl}>이메일</label><input style={{...inp,fontSize:16}} value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} /></div>
-            <div><label style={lbl}>메모</label><textarea style={{...inp,fontSize:15,height:72,resize:'none' as const}} value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
+            <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
+            <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>이메일</label><input style={{...inp,fontSize:16}} placeholder="example@email.com" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} /></div>
+            <div><label style={lbl}>주소</label><input style={{...inp,fontSize:16}} placeholder="서울시 강남구..." value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
+            <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
+            <div>
+              <label style={lbl}>상담 단계</label>
+              <div style={{display:'flex',gap:6,flexWrap:'wrap' as const}}>
+                {STAGES.map(s=>(
+                  <button key={s.key} onClick={()=>setForm(p=>({...p,stage:s.key}))}
+                    style={{padding:'6px 12px',borderRadius:6,fontSize:12,cursor:'pointer',
+                    border:`1px solid ${form.stage===s.key?s.color:BORDER}`,
+                    background:form.stage===s.key?s.bg:WHITE,
+                    color:form.stage===s.key?s.color:TX3,
+                    fontWeight:form.stage===s.key?600:400}}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div><label style={lbl}>메모</label><textarea style={{...inp,fontSize:15,height:72,resize:'none' as const}} placeholder="특이사항..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
           </div>
         )}
 
