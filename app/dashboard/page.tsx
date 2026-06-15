@@ -518,6 +518,7 @@ export default function Home(){
     {id:'partners',label:'제휴업체'},
     {id:'calendar',label:'캘린더'},
     {id:'report',label:'실적 리포트'},
+    {id:'import',label:'📥 연락처 불러오기'},
     {id:'profile',label:'프로필 설정'},
   ]
 
@@ -567,6 +568,7 @@ export default function Home(){
         {page==='calendar'&&<Calendar />}
         {page==='report'&&<Report clients={clients} />}
         {page==='profile'&&<Profile salesperson={salesperson} setSalesperson={setSalesperson} user={user} />}
+        {page==='import'&&<ImportContacts setClients={setClients} user={user} />}
       </main>
     </div>
   )
@@ -1469,6 +1471,114 @@ function Report({clients}:any){
   )
 }
 
+function ImportContacts({setClients,user}:any){
+  const [importing,setImporting]=useState(false)
+  const [result,setResult]=useState<any>(null)
+  const [preview,setPreview]=useState<any[]>([])
+  const [error,setError]=useState('')
+
+  const handleFile=async(e:React.ChangeEvent<HTMLInputElement>)=>{
+    const file=e.target.files?.[0]
+    if(!file) return
+    setImporting(true);setError('');setResult(null)
+    const ext=file.name.split('.').pop()?.toLowerCase()
+    const reader=new FileReader()
+    reader.onload=async()=>{
+      const content=reader.result as string
+      const fileType=ext==='vcf'?'vcf':'csv'
+      try{
+        const res=await fetch('/api/import-contacts',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({fileContent:content,fileType,userId:user?.id})
+        })
+        const data=await res.json()
+        if(data.error) setError(data.error)
+        else{setResult(data);setPreview(data.contacts||[])}
+      }catch(e:any){setError('파일 처리 중 오류가 발생했어요')}
+      setImporting(false)
+    }
+    reader.readAsText(file,'UTF-8')
+  }
+
+  return(
+    <div>
+      <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>📥 연락처 불러오기</div>
+      <div style={{fontSize:13,color:TX3,marginBottom:24}}>아이폰·안드로이드 연락처를 한번에 가져오세요</div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
+        {[
+          {icon:'🍎',title:'아이폰',desc:'iCloud.com → 연락처 → 내보내기 → .vcf 저장'},
+          {icon:'🤖',title:'삼성 갤럭시',desc:'연락처 앱 → 설정 → 연락처 내보내기 → .vcf'},
+          {icon:'📊',title:'엑셀/CSV',desc:'이름, 전화번호 컬럼으로 저장 후 업로드'},
+        ].map((f,i)=>(
+          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'16px'}}>
+            <div style={{fontSize:28,marginBottom:8}}>{f.icon}</div>
+            <div style={{fontSize:13,fontWeight:600,color:TX1,marginBottom:4}}>{f.title}</div>
+            <div style={{fontSize:11,color:TX3,lineHeight:1.5}}>{f.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {!result&&(
+        <label style={{display:'flex',flexDirection:'column' as const,alignItems:'center',justifyContent:'center',gap:12,padding:'48px 32px',border:`2px dashed ${GOLD}`,borderRadius:12,cursor:'pointer',background:GOLD_BG,marginBottom:16}}>
+          {importing?(
+            <div style={{textAlign:'center' as const}}>
+              <div style={{fontSize:32,marginBottom:8}}>⏳</div>
+              <div style={{fontSize:15,color:GOLD_TX,fontWeight:600}}>연락처 불러오는 중...</div>
+            </div>
+          ):(
+            <>
+              <div style={{fontSize:48}}>📂</div>
+              <div style={{fontSize:16,fontWeight:600,color:GOLD_TX}}>파일 선택하기</div>
+              <div style={{fontSize:13,color:TX3}}>.vcf / .csv 파일 지원</div>
+            </>
+          )}
+          <input type="file" accept=".vcf,.csv" style={{display:'none'}} onChange={handleFile} disabled={importing} />
+        </label>
+      )}
+
+      {error&&<div style={{background:'#FFF5F5',border:'1px solid #FFC0C0',borderRadius:8,padding:'14px 18px',marginBottom:16,color:RED,fontSize:14}}>⚠️ {error}</div>}
+
+      {result&&(
+        <div>
+          <div style={{background:GREEN_BG,border:`1px solid ${GREEN_BD}`,borderRadius:8,padding:'16px 20px',marginBottom:16}}>
+            <div style={{fontSize:16,fontWeight:600,color:GREEN,marginBottom:4}}>🎉 불러오기 완료!</div>
+            <div style={{fontSize:14,color:GREEN}}>{result.count}명의 연락처가 등록됐어요</div>
+          </div>
+          <div style={card}>
+            <div style={cardH}><span>등록된 연락처 미리보기 (최대 5명)</span></div>
+            {preview.map((c:any,i:number)=>(
+              <div key={i} style={{...row,borderBottom:i===preview.length-1?'none':`1px solid ${BORDER2}`}}>
+                <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
+                  <div style={{fontSize:12,color:TX3}}>{c.phone||'전화번호 없음'} {c.email?`· ${c.email}`:''}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={()=>{setResult(null);setPreview([])}} style={{...btn('navy'),marginTop:12}}>추가로 더 불러오기</button>
+        </div>
+      )}
+
+      <div style={{...card,marginTop:16}}>
+        <div style={cardH}><span>📋 엑셀 양식 다운로드</span></div>
+        <div style={{padding:'16px 20px'}}>
+          <div style={{fontSize:13,color:TX2,marginBottom:12}}>엑셀로 고객을 일괄 등록하고 싶으면 아래 양식을 사용해주세요.</div>
+          <button onClick={()=>{
+            const csv='이름,전화번호,이메일,주소,메모
+홍길동,010-1234-5678,hong@email.com,서울시 강남구,VIP 고객'
+            const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})
+            const url=URL.createObjectURL(blob)
+            const a=document.createElement('a');a.href=url;a.download='salespath_고객등록양식.csv';a.click()
+          }} style={btn()}>📥 엑셀 양식 다운로드</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Profile({salesperson,setSalesperson,user}:any){
   const supabase=createClient()
   const [form,setForm]=useState({
@@ -1645,6 +1755,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
         {page==='calendar'&&<MobileCalendar setPage={setPage} />}
         {page==='report'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>실적 리포트</div></div><Report clients={clients} /></div>}
         {page==='partners'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>제휴업체</div></div><Partners partners={partners} setPartners={setPartners} /></div>}
+        {page==='import'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>연락처 불러오기</div></div><ImportContacts setClients={setClients} user={user} /></div>}
       </div>
 
       {/* 하단 탭바 */}
@@ -2522,6 +2633,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
     {id:'calendar',icon:'📅',label:'캘린더'},
     {id:'report',icon:'📊',label:'실적 리포트'},
     {id:'partners',icon:'🤝',label:'제휴업체'},
+    {id:'import',icon:'📥',label:'연락처 불러오기'},
   ]
 
   if(section==='profile') return(
@@ -2552,7 +2664,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
       <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
         {menus.map((m,i)=>(
           <div key={m.id} style={{display:'flex',alignItems:'center',padding:'16px',gap:14,borderBottom:i===menus.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}}
-            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'?setPage(m.id):setSection(m.id)}>
+            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'||m.id==='import'?setPage(m.id):setSection(m.id)}>
             <span style={{fontSize:22}}>{m.icon}</span>
             <span style={{fontSize:15,color:TX1,fontWeight:500}}>{m.label}</span>
             <span style={{marginLeft:'auto',color:TX3,fontSize:16}}>›</span>
