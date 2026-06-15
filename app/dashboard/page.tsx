@@ -320,6 +320,20 @@ export default function Home(){
   },[])
 
   useEffect(()=>{
+    const registerPush=async()=>{
+      if(!('serviceWorker' in navigator)||!('Notification' in window)) return
+      try {
+        const reg=await navigator.serviceWorker.register('/sw.js')
+        console.log('SW registered:', reg)
+        if(Notification.permission==='default'){
+          await Notification.requestPermission()
+        }
+      } catch(e){ console.log('SW error:', e) }
+    }
+    registerPush()
+  },[])
+
+  useEffect(()=>{
     const load=async()=>{
       const{data:{user}}=await supabase.auth.getUser()
       if(!user){router.push('/login');return}
