@@ -236,77 +236,10 @@ export default function LandingPage() {
           <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center' as const }}>
             <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>App Install</div>
             <h2 style={{ fontSize:mounted&&isMobile?24:32, fontWeight:700, color:'#1B2A4A', marginBottom:12 }}>📱 앱으로 설치하세요</h2>
-            <p style={{ fontSize:14, color:'#555550', lineHeight:1.7, marginBottom:32 }}>앱스토어 없이 홈 화면에 바로 설치할 수 있어요!</p>
-            <div style={{ display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr':'1fr 1fr', gap:16 }}>
-
-              {/* 아이폰 */}
-              <div style={{ background:'#FFFFFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'24px 20px', textAlign:'left' as const }}>
-                <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                    <rect width="36" height="36" rx="8" fill="#1B2A4A"/>
-                    <path d="M18 6C15.5 6 13.5 8 13.5 10.5C13.5 10.7 13.5 10.9 13.6 11.1C11.2 11.5 9 13.8 9 17C9 21.5 12 27 15 27C16 27 16.8 26.5 18 26.5C19.2 26.5 20 27 21 27C24 27 27 21.5 27 17C27 13.8 24.8 11.5 22.4 11.1C22.5 10.9 22.5 10.7 22.5 10.5C22.5 8 20.5 6 18 6Z" fill="white"/>
-                    <path d="M18 6C19.5 6 20.5 7 20.5 8.5" stroke="#1B2A4A" strokeWidth="0.5"/>
-                  </svg>
-                  <div>
-                    <div style={{ fontSize:16, fontWeight:700, color:'#1B2A4A' }}>아이폰 (iOS)</div>
-                    <div style={{ fontSize:12, color:'#888' }}>Safari 브라우저</div>
-                  </div>
-                </div>
-                {['Safari에서 SalesPath 접속','하단 공유버튼 탭 (□↑)','홈 화면에 추가 선택','오른쪽 상단 추가 탭'].map((s,i)=>(
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                    <div style={{ width:22, height:22, borderRadius:'50%', background:'#1B2A4A', color:'#C9A84C', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
-                    <span style={{ fontSize:13, color:'#555' }}>{s}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* 안드로이드 */}
-              <div style={{ background:'#FFFFFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'24px 20px', textAlign:'left' as const }}>
-                <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16 }}>
-                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                    <rect width="36" height="36" rx="8" fill="#1B2A4A"/>
-                    <path d="M10 14C10 12.9 10.9 12 12 12H24C25.1 12 26 12.9 26 14V24C26 25.1 25.1 26 24 26H12C10.9 26 10 25.1 10 24V14Z" fill="white"/>
-                    <circle cx="14" cy="19" r="1.5" fill="#1B2A4A"/>
-                    <circle cx="18" cy="19" r="1.5" fill="#1B2A4A"/>
-                    <circle cx="22" cy="19" r="1.5" fill="#1B2A4A"/>
-                    <path d="M13 12L11 9M23 12L25 9" stroke="#C9A84C" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                  <div>
-                    <div style={{ fontSize:16, fontWeight:700, color:'#1B2A4A' }}>안드로이드</div>
-                    <div style={{ fontSize:12, color:'#888' }}>Chrome 브라우저</div>
-                  </div>
-                </div>
-                {['Chrome에서 SalesPath 접속','우측 상단 ⋯ 버튼 탭','홈 화면에 추가 선택','설치 버튼 탭'].map((s,i)=>(
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                    <div style={{ width:22, height:22, borderRadius:'50%', background:'#1B2A4A', color:'#C9A84C', fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
-                    <span style={{ fontSize:13, color:'#555' }}>{s}</span>
-                  </div>
-                ))}
-                <button
-                  onClick={()=>{
-                    const e = new Event('beforeinstallprompt')
-                    window.dispatchEvent(e)
-                  }}
-                  style={{ width:'100%', marginTop:8, padding:'11px', borderRadius:6, fontSize:13, fontWeight:600, cursor:'pointer', border:'none', background:'#1B2A4A', color:'#C9A84C' }}>
-                  📲 앱 설치하기
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </section>
-
-        {/* 앱 설치 안내 */}
-        <section style={{ padding:mounted&&isMobile?'40px 16px':'60px 32px', background:'#F2EDE8', borderTop:`1px solid ${BORDER}` }}>
-          <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center' as const }}>
-            <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>App Install</div>
-            <h2 style={{ fontSize:mounted&&isMobile?24:32, fontWeight:700, color:'#1B2A4A', marginBottom:12 }}>📱 앱으로 설치하세요</h2>
-            <p style={{ fontSize:14, color:'#555550', lineHeight:1.7, marginBottom:32 }}>앱스토어 없이 홈 화면에 바로 설치할 수 있어요!</p>
-            <div style={{ display:'flex', gap:16, justifyContent:'center', flexWrap:'wrap' as const, marginBottom:32 }}>
-
-              {/* 안드로이드 버튼 */}
-              <button style={{ display:'flex', alignItems:'center', gap:12, background:'#000', color:'#FFF', border:'none', borderRadius:10, padding:'10px 20px', cursor:'pointer', minWidth:180 }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <p style={{ fontSize:14, color:'#555550', lineHeight:1.7, marginBottom:28 }}>앱스토어 없이 홈 화면에 바로 설치할 수 있어요!</p>
+            <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' as const, marginBottom:28 }}>
+              <button style={{ display:'flex', alignItems:'center', gap:10, background:'#000', color:'#FFF', border:'none', borderRadius:10, padding:'10px 20px', cursor:'pointer', minWidth:160 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path d="M3 20.5L12 12M3 3.5L12 12M12 12L21 3.5M12 12L21 20.5" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round"/>
                   <path d="M3 3.5C3 3.5 2 4 2 5V19C2 20 3 20.5 3 20.5L12 12L3 3.5Z" fill="#EA4335"/>
                   <path d="M21 3.5L12 12L21 20.5C21 20.5 22 20 22 19V5C22 4 21 3.5 21 3.5Z" fill="#FBBC05"/>
@@ -315,37 +248,32 @@ export default function LandingPage() {
                 </svg>
                 <div style={{ textAlign:'left' as const }}>
                   <div style={{ fontSize:10, color:'#AAA', lineHeight:1 }}>Android에서</div>
-                  <div style={{ fontSize:15, fontWeight:700, lineHeight:1.4 }}>설치하기</div>
+                  <div style={{ fontSize:14, fontWeight:700, lineHeight:1.4 }}>설치하기</div>
                 </div>
               </button>
-
-              {/* 아이폰 버튼 */}
-              <button onClick={()=>router.push('#ios-guide')} style={{ display:'flex', alignItems:'center', gap:12, background:'#000', color:'#FFF', border:'none', borderRadius:10, padding:'10px 20px', cursor:'pointer', minWidth:180 }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+              <button style={{ display:'flex', alignItems:'center', gap:10, background:'#000', color:'#FFF', border:'none', borderRadius:10, padding:'10px 20px', cursor:'pointer', minWidth:160 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                   <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.78 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
                 </svg>
                 <div style={{ textAlign:'left' as const }}>
                   <div style={{ fontSize:10, color:'#AAA', lineHeight:1 }}>iOS에서</div>
-                  <div style={{ fontSize:15, fontWeight:700, lineHeight:1.4 }}>설치하기</div>
+                  <div style={{ fontSize:14, fontWeight:700, lineHeight:1.4 }}>설치하기</div>
                 </div>
               </button>
-
             </div>
-
-            {/* 설치 방법 안내 */}
             <div style={{ display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr':'1fr 1fr', gap:16, textAlign:'left' as const }}>
               <div style={{ background:'#FFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'20px' }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'#1B2A4A', marginBottom:12 }}>🤖 안드로이드 설치 방법</div>
-                {['Chrome에서 SalesPath 접속','위 안드로이드 버튼 탭','설치 팝업에서 설치 버튼 탭','홈 화면에 아이콘 생성 완료!'].map((s,i)=>(
+                {['Chrome에서 SalesPath 접속','우측 상단 ⋯ 버튼 탭','홈 화면에 추가 선택','설치 버튼 탭 완료!'].map((s,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                     <div style={{ width:20, height:20, borderRadius:'50%', background:'#1B2A4A', color:'#C9A84C', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
                     <span style={{ fontSize:12, color:'#555' }}>{s}</span>
                   </div>
                 ))}
               </div>
-              <div id="ios-guide" style={{ background:'#FFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'20px' }}>
+              <div style={{ background:'#FFF', border:`1px solid ${BORDER}`, borderRadius:10, padding:'20px' }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'#1B2A4A', marginBottom:12 }}>🍎 아이폰 설치 방법</div>
-                {['Safari에서 SalesPath 접속','하단 공유버튼 탭 (□↑)','홈 화면에 추가 선택','오른쪽 상단 추가 탭'].map((s,i)=>(
+                {['Safari에서 SalesPath 접속','하단 공유버튼 탭 (□↑)','홈 화면에 추가 선택','오른쪽 상단 추가 탭 완료!'].map((s,i)=>(
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
                     <div style={{ width:20, height:20, borderRadius:'50%', background:'#1B2A4A', color:'#C9A84C', fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
                     <span style={{ fontSize:12, color:'#555' }}>{s}</span>
