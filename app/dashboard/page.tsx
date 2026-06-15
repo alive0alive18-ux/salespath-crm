@@ -363,9 +363,20 @@ export default function Home(){
     <div style={{display:'flex',minHeight:'100vh',background:CREAM,fontFamily:"'DM Sans','Apple SD Gothic Neo',system-ui,sans-serif",fontSize:14}}>
       {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} onDelete={(id:string)=>setClients(p=>p.filter(c=>c.id!==id))} />}
       <aside style={{width:210,background:NAVY,display:'flex',flexDirection:'column',flexShrink:0}}>
-        <div style={{padding:'28px 22px 22px',borderBottom:`1px solid ${NAVY2}`}}>
-          <div style={{fontSize:10,color:NAVY3,letterSpacing:'.22em',marginBottom:6,textTransform:'uppercase'}}>Sales CRM</div>
-          <div style={{fontSize:21,fontWeight:500,color:CREAM,letterSpacing:'.02em'}}>SalesPath</div>
+        <div style={{padding:'24px 22px 20px',borderBottom:`1px solid ${NAVY2}`,cursor:'pointer'}} onClick={()=>setPage('dashboard')}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <rect width="36" height="36" rx="6" fill="#243758"/>
+              <polygon points="18,6 18,14 12,10 12,18 24,18 24,10" fill="none" stroke="#C9A84C" strokeWidth="1.8" strokeLinejoin="round"/>
+              <circle cx="12" cy="9" r="2.2" fill="#C9A84C"/>
+              <circle cx="18" cy="5" r="2.2" fill="#C9A84C"/>
+              <circle cx="24" cy="9" r="2.2" fill="#C9A84C"/>
+            </svg>
+            <div>
+              <div style={{fontSize:17,fontWeight:600,color:CREAM,letterSpacing:'.03em',lineHeight:1.1}}>SalesPath</div>
+              <div style={{fontSize:9,color:NAVY3,letterSpacing:'.18em',textTransform:'uppercase' as const,marginTop:2}}>Sales CRM</div>
+            </div>
+          </div>
         </div>
         <div style={{paddingTop:8,flex:1}}>
           {nav.map(n=>(
@@ -708,16 +719,7 @@ function Clients({clients,setClients,onSelect}:any){
           </button>
         ))}
       </div>
-      <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap' as const}}>
-        {[{key:'all',label:'전체'},{key:'delivered',label:'✅ 출고'},{key:'prospect',label:'🎯 가망'},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`}))].map(cat=>(
-          <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,flexShrink:0}}>{cat.label}</button>
-        ))}
-      </div>
-      <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap' as const}}>
-        {[{key:'all',label:'전체'},{key:'delivered',label:'✅ 출고'},{key:'prospect',label:'🎯 가망'},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`}))].map(cat=>(
-          <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,flexShrink:0}}>{cat.label}</button>
-        ))}
-      </div>
+
       <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap' as const}}>
         <input style={{...inp,flex:1,minWidth:200}} placeholder="이름, 전화번호, 차량 검색..." value={search} onChange={e=>setSearch(e.target.value)} />
         <select style={{...inp,width:'auto'}} value={stageFilter} onChange={e=>setStageFilter(e.target.value)}>
@@ -1390,9 +1392,18 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {/* 상단 헤더 */}
       <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div>
-            <div style={{fontSize:10,color:NAVY3,letterSpacing:'.2em',textTransform:'uppercase' as const}}>Sales CRM</div>
-            <div style={{fontSize:18,fontWeight:600,color:WHITE,letterSpacing:'.02em'}}>SalesPath</div>
+          <div style={{display:'flex',alignItems:'center',gap:10,cursor:'pointer'}} onClick={()=>setPage('dashboard')}>
+            <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+              <rect width="36" height="36" rx="6" fill="#243758"/>
+              <polygon points="18,6 18,14 12,10 12,18 24,18 24,10" fill="none" stroke="#C9A84C" strokeWidth="1.8" strokeLinejoin="round"/>
+              <circle cx="12" cy="9" r="2.2" fill="#C9A84C"/>
+              <circle cx="18" cy="5" r="2.2" fill="#C9A84C"/>
+              <circle cx="24" cy="9" r="2.2" fill="#C9A84C"/>
+            </svg>
+            <div>
+              <div style={{fontSize:9,color:NAVY3,letterSpacing:'.18em',textTransform:'uppercase' as const}}>Sales CRM</div>
+              <div style={{fontSize:17,fontWeight:700,color:WHITE,letterSpacing:'.02em'}}>SalesPath</div>
+            </div>
           </div>
           <div style={{textAlign:'right' as const}}>
             <div style={{fontSize:13,color:WHITE,fontWeight:500}}>{salesperson?.name||user?.email}</div>
