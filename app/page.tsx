@@ -22,7 +22,7 @@ export default function LandingPage() {
 
   const features = [
     { icon:'⚡', title:'당직 고객 빠른 등록', desc:'이름, 전화번호, 관심 차종으로 10초 안에 등록', color:GOLD },
-    { icon:'🗓️', title:'스마트 자동 스케줄러', desc:'인도일 입력 하나로 감사문자·점검 알림 자동 생성', color:GREEN },
+    { icon:'🗓️', title:'스마트 자동 알림', desc:'인도일 입력 하나로 감사문자·점검 알림이 자동 생성돼요. 알림 보고 원클릭 발송!', color:GREEN },
     { icon:'📊', title:'계약 단계 관리', desc:'첫방문→시승→견적→계약→출고 한눈에', color:PURPLE },
     { icon:'💬', title:'문자 템플릿', desc:'자주 쓰는 문자 저장, 원클릭 복사', color:BLUE },
     { icon:'🎂', title:'생일 & 기념일 알림', desc:'고객 생일, 인도 기념일 자동 알림', color:'#E91E8C' },
@@ -139,7 +139,7 @@ export default function LandingPage() {
           <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' as const }}>
             <div style={{ fontSize:11, color:GOLD, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Automation</div>
             <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />모든 게 자동으로</h2>
-            <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:40 }}>차량 인도일만 입력하면 이후 모든 연락이 자동 예약됩니다</p>
+            <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:40 }}>차량 인도일만 입력하면 연락 알림이 자동으로 생성돼요. 알림을 보고 문자 템플릿으로 빠르게 발송하세요!</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, alignItems:'center' }}>
               {[
                 { day:'인도일', label:'차량 인도', color:GOLD },
