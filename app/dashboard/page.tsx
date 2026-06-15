@@ -1567,8 +1567,7 @@ function ImportContacts({setClients,user}:any){
         <div style={{padding:'16px 20px'}}>
           <div style={{fontSize:13,color:TX2,marginBottom:12}}>엑셀로 고객을 일괄 등록하고 싶으면 아래 양식을 사용해주세요.</div>
           <button onClick={()=>{
-            const csv='이름,전화번호,이메일,주소,메모
-홍길동,010-1234-5678,hong@email.com,서울시 강남구,VIP 고객'
+            const csv=['이름,전화번호,이메일,주소,메모','홍길동,010-1234-5678,hong@email.com,서울시 강남구,VIP 고객'].join('\n')
             const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'})
             const url=URL.createObjectURL(blob)
             const a=document.createElement('a');a.href=url;a.download='salespath_고객등록양식.csv';a.click()
