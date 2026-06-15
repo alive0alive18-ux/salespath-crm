@@ -65,6 +65,18 @@ const card={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflo
 const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:14,fontWeight:600,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
 const row={display:'flex',alignItems:'center',padding:'15px 20px',borderBottom:`1px solid ${BORDER2}`,gap:12}
 
+function getChecklist(client:any){
+  return [
+    {id:'first_visit', label:'첫 방문 상담', done:!!client.consultation_date},
+    {id:'test_drive',  label:'시승 완료',    done:client.stage==='test_drive'||client.stage==='quote'||client.stage==='contract'||client.stage==='delivered'},
+    {id:'quote',       label:'견적 제출',    done:client.stage==='quote'||client.stage==='contract'||client.stage==='delivered'},
+    {id:'finance',     label:'금융 상담',    done:!!client.purchase_type},
+    {id:'color',       label:'색상 결정',    done:!!client.car_color},
+    {id:'contract',    label:'계약 완료',    done:client.stage==='contract'||client.stage==='delivered'},
+    {id:'delivered',   label:'출고 완료',    done:client.stage==='delivered'},
+  ]
+}
+
 function getGoldenTiming(client:any){
   if(!client.delivery_date) return null
   const delivery = new Date(client.delivery_date)
@@ -182,7 +194,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
     onDelete(client.id);onClose()
   }
 
-  const tabs=[{id:'info',l:'기본 정보'},{id:'vehicle',l:'차량 정보'},{id:'history',l:'연락 히스토리'},{id:'estimates',l:'견적서'}]
+  const tabs=[{id:'info',l:'기본 정보'},{id:'vehicle',l:'차량 정보'},{id:'checklist',l:'체크리스트'},{id:'history',l:'연락 히스토리'},{id:'estimates',l:'견적서'}]
   const stg=getStage(client.stage||'first_visit')
 
   return(
@@ -317,6 +329,46 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
               {!client.delivery_date&&<div style={{padding:'14px 22px',background:GOLD_BG,borderTop:`1px solid ${BORDER}`}}><div style={{fontSize:13,color:GOLD_TX}}>💡 차량 인도일을 입력하면 감사문자·정기점검 알림이 자동 생성돼요!</div></div>}
             </div>
           ))}
+          {tab==='checklist'&&(
+            <div>
+              <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
+                {getChecklist(client).map((item,i,arr)=>(
+                  <div key={item.id} style={{display:'flex',alignItems:'center',gap:14,padding:'16px 22px',borderBottom:i===arr.length-1?'none':`1px solid ${BORDER2}`,opacity:item.done?1:0.6}}>
+                    <div style={{width:28,height:28,borderRadius:'50%',background:item.done?GREEN:BORDER,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}>
+                      <span style={{color:WHITE,fontSize:14,fontWeight:700}}>{item.done?'✓':''}</span>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:500,color:item.done?TX1:TX3}}>{item.label}</div>
+                    </div>
+                    <span style={{fontSize:12,color:item.done?GREEN:TX3,fontWeight:600}}>{item.done?'완료':'미완료'}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,padding:'16px 22px'}}>
+                <div style={{fontSize:13,fontWeight:600,color:TX1,marginBottom:10}}>진행률</div>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+                  <span style={{fontSize:13,color:TX2}}>계약까지</span>
+                  <span style={{fontSize:13,fontWeight:600,color:TX1}}>
+                    {getChecklist(client).filter(c=>c.done).length} / {getChecklist(client).length}
+                  </span>
+                </div>
+                <div style={{height:8,background:BORDER,borderRadius:4}}>
+                  <div style={{
+                    height:8,
+                    width:`${Math.round(getChecklist(client).filter(c=>c.done).length/getChecklist(client).length*100)}%`,
+                    background:getChecklist(client).filter(c=>c.done).length===getChecklist(client).length?GREEN:GOLD,
+                    borderRadius:4,transition:'width .3s'
+                  }} />
+                </div>
+                <div style={{fontSize:12,color:TX3,marginTop:8}}>
+                  {getChecklist(client).filter(c=>c.done).length===getChecklist(client).length
+                    ?'🎉 모든 단계 완료!'
+                    :`다음 단계: ${getChecklist(client).find(c=>!c.done)?.label}`}
+                </div>
+              </div>
+            </div>
+          )}
+
           {tab==='history'&&(
             <div>
               <div style={{background:WHITE,borderRadius:4,border:`1px solid ${BORDER}`,padding:20,marginBottom:16}}>
@@ -721,9 +773,12 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
                     <div style={{fontSize:12,color:TX3}}>{c.phone||'—'}</div>
                   </div>
                 </div>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
                   <span style={{fontSize:12,color:TX2}}>{c.car_model||'차량 미등록'}</span>
                   <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+                </div>
+                <div style={{height:3,background:BORDER,borderRadius:2}}>
+                  <div style={{height:3,width:`${Math.round(getChecklist(c).filter((item:any)=>item.done).length/getChecklist(c).length*100)}%`,background:GOLD,borderRadius:2}} />
                 </div>
               </div>
             )
