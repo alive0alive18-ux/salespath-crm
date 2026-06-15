@@ -65,6 +65,31 @@ const card={background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,overflo
 const cardH={padding:'14px 20px',borderBottom:`1px solid ${BORDER2}`,fontSize:14,fontWeight:600,color:TX1,display:'flex',alignItems:'center',justifyContent:'space-between',letterSpacing:'.01em'}
 const row={display:'flex',alignItems:'center',padding:'15px 20px',borderBottom:`1px solid ${BORDER2}`,gap:12}
 
+function getTemperature(client:any){
+  const memo = (client.memo||'').toLowerCase()
+  const note = (client.interest_model||'') + (client.competitor||'')
+  
+  // 🔥 HOT 키워드
+  const hotWords = ['다음 주','이번 주','곧','빨리','결정','계약','오겠다','연락 주세요','할게요','사겠','좋아요','마음에','확정']
+  // 🌡️ WARM 키워드  
+  const warmWords = ['생각','고려','검토','비교','알아보','관심','시승','견적']
+  // ❄️ COLD 키워드
+  const coldWords = ['가격 부담','비싸','어렵','모르겠','아직','나중에','천천히','부담']
+
+  const text = memo + note
+  
+  if(hotWords.some(w=>text.includes(w))) return {label:'🔥 HOT',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0'}
+  if(coldWords.some(w=>text.includes(w))) return {label:'❄️ 관망',color:'#1D4ED8',bg:'#EFF6FF',bd:'#BFDBFE'}
+  if(warmWords.some(w=>text.includes(w))) return {label:'🌡️ 관심',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A'}
+  
+  // 단계별 기본 온도
+  if(client.stage==='contract'||client.stage==='delivered') return {label:'🔥 HOT',color:'#DC2626',bg:'#FFF5F5',bd:'#FFC0C0'}
+  if(client.stage==='quote') return {label:'🌡️ 관심',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A'}
+  if(client.stage==='test_drive') return {label:'🌡️ 관심',color:'#D97706',bg:'#FFFBEB',bd:'#FDE68A'}
+  
+  return {label:'😐 보통',color:'#888888',bg:'#F5F5F5',bd:'#DDD'}
+}
+
 function getLabel(note:string){
   if(note?.includes('감사')) return {label:'감사문자',color:GREEN,bg:GREEN_BG,bd:GREEN_BD}
   if(note?.includes('1년')) return {label:'1년 점검',color:BLUE,bg:BLUE_BG,bd:BLUE_BD}
@@ -533,7 +558,7 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
         {[
           {l:'전체 고객',v:clients.length,s:`이번달 +${thisMonth.length}명`,vc:TX1},
           {l:'오늘 연락',v:schedules.length,s:'미완료',vc:schedules.length>0?GOLD:TX1},
-          {l:'계약·출고',v:contracted.length,s:'이번달',vc:contracted.length>0?GREEN:TX1},
+          {l:'🔥 HOT 고객',v:clients.filter((c:any)=>getTemperature(c).label.includes('HOT')).length,s:'계약 임박',vc:RED},
           {l:'VIP 고객',v:vipClients.length,s:'⭐ 관리 중',vc:vipClients.length>0?AMBER:TX1},
         ].map((s,i)=>(
           <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px'}}>
@@ -817,7 +842,10 @@ function Clients({clients,setClients,onSelect}:any){
               </div>
               <span style={{fontSize:13,color:TX2}}>{c.interest_model||c.car_model||'—'}</span>
               <span style={{fontSize:13,color:TX3}}>{c.consultation_date||c.delivery_date||'—'}</span>
-              <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+              <div style={{display:'flex',flexDirection:'column' as const,gap:4}}>
+                <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+                <span style={{...badge(getTemperature(c).color,getTemperature(c).bg,getTemperature(c).bd),fontSize:10}}>{getTemperature(c).label}</span>
+              </div>
               <button style={btn('sm')} onClick={e=>{e.stopPropagation();onSelect(c)}}>상세 →</button>
             </div>
           )
@@ -2092,12 +2120,12 @@ function MobileClients({clients,setClients,onSelect,onCall,onSms}:any){
               </div>
               <div style={{flex:1,cursor:'pointer'}} onClick={()=>onSelect(c)}>
                 <div style={{fontSize:15,fontWeight:500,color:TX1}}>{c.name}</div>
-                <div style={{fontSize:12,color:TX3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
+                <div style={{fontSize:12,color:TX3,marginBottom:3}}>{c.phone||'—'} · {c.interest_model||c.car_model||'차종 미정'}</div>
+                <span style={{...badge(getTemperature(c).color,getTemperature(c).bg,getTemperature(c).bd),fontSize:10}}>{getTemperature(c).label}</span>
               </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
                 {c.phone&&<button onClick={e=>{e.stopPropagation();onCall(c)}} style={{width:36,height:36,borderRadius:'50%',background:GREEN_BG,border:`1px solid ${GREEN_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>📞</button>}
                 {c.phone&&<button onClick={e=>{e.stopPropagation();onSms(c)}} style={{width:36,height:36,borderRadius:'50%',background:BLUE_BG,border:`1px solid ${BLUE_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>✉️</button>}
-                <span style={badge(stg.color,stg.bg,stg.bd)} onClick={()=>onSelect(c)}>{stg.label}</span>
               </div>
             </div>
           )
