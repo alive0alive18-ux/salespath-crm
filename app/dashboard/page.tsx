@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -21,11 +21,38 @@ const STAGES = [
 const getStage = (key:string) => STAGES.find(s=>s.key===key) || STAGES[0]
 
 function formatPhone(v:string) {
+  // +8210 → 010 자동 변환
+  v = v.replace(/^\+82[-.\s]?10/, '010').replace(/^\+82/, '0')
   const n=v.replace(/\D/g,'')
   if(n.length<=3) return n
   if(n.length<=7) return `${n.slice(0,3)}-${n.slice(3)}`
   if(n.length<=11) return `${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7)}`
   return `${n.slice(0,3)}-${n.slice(3,7)}-${n.slice(7,11)}`
+}
+
+function PhoneInput({value, onChange, style, placeholder}:any) {
+  const ref = React.useRef<HTMLInputElement>(null)
+  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target
+    const cursorPos = input.selectionStart || 0
+    const oldVal = input.value
+    const newVal = formatPhone(e.target.value)
+    
+    // 커서 위치 계산
+    const oldDashes = oldVal.slice(0, cursorPos).split('-').length - 1
+    const newDashes = newVal.slice(0, cursorPos).split('-').length - 1
+    const newCursor = cursorPos + (newDashes - oldDashes)
+    
+    onChange(newVal)
+    
+    // 다음 렌더링 후 커서 위치 복원
+    setTimeout(() => {
+      if(ref.current) {
+        ref.current.setSelectionRange(newCursor, newCursor)
+      }
+    }, 0)
+  }
+  return <input ref={ref} style={style} placeholder={placeholder||'010-0000-0000'} value={value} onChange={handleChange} type="tel" />
 }
 
 const av=(c=NAVY)=>({width:36,height:36,borderRadius:'50%',background:c+'15',border:`1px solid ${c}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:500,color:c,flexShrink:0})
@@ -160,7 +187,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
             <div style={{background:WHITE,borderRadius:4,padding:22,border:`1px solid ${BORDER}`}}>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
                 <div><label style={lbl}>이름</label><input style={inp} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-                <div><label style={lbl}>전화번호</label><input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+                <div><label style={lbl}>전화번호</label><PhoneInput style={inp} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
                 <div><label style={lbl}>이메일</label><input style={inp} value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} /></div>
                 <div><label style={lbl}>생일</label><input style={inp} type="date" value={form.birthday} onChange={e=>setForm(p=>({...p,birthday:e.target.value}))} /></div>
                 <div><label style={lbl}>최초 컨택 장소</label><input style={inp} value={form.contact_place} onChange={e=>setForm(p=>({...p,contact_place:e.target.value}))} /></div>
@@ -703,7 +730,7 @@ function Clients({clients,setClients,onSelect}:any){
           </div>
           <div style={{padding:22,display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
             <div><label style={lbl}>이름 *</label><input style={inp} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>전화번호</label><PhoneInput style={inp} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
             <div><label style={lbl}>관심 차종</label><input style={inp} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
             <div style={{gridColumn:'1/-1'}}><label style={lbl}>메모</label><textarea style={{...inp,height:80,resize:'none' as const}} placeholder="특이사항 메모..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
             {!quickMode&&<>
@@ -929,7 +956,7 @@ function Partners({partners,setPartners}:any){
           <div style={cardH}><span>신규 제휴업체 등록</span></div>
           <div style={{padding:22,display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
             <div><label style={lbl}>업체명 *</label><input style={inp} placeholder="프리미엄 광택 강남점" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="02-000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>전화번호</label><PhoneInput style={inp} placeholder="02-000-0000" value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
             <div><label style={lbl}>업종</label><input style={inp} placeholder="광택·세라믹" value={form.category} onChange={e=>setForm(p=>({...p,category:e.target.value}))} /></div>
             <div><label style={lbl}>리워드 내용</label><input style={inp} placeholder="20% 할인 바우처" value={form.reward_description} onChange={e=>setForm(p=>({...p,reward_description:e.target.value}))} /></div>
             <div style={{gridColumn:'1/-1',display:'flex',gap:8,justifyContent:'flex-end'}}>
@@ -1345,7 +1372,7 @@ function Profile({salesperson,setSalesperson,user}:any){
           <div style={cardH}><span>기본 정보</span></div>
           <div style={{padding:22,display:'grid',gap:14}}>
             <div><label style={lbl}>이름</label><input style={inp} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>전화번호</label><PhoneInput style={inp} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
             <div>
               <label style={lbl}>브랜드</label>
               <select style={inp} value={form.brand} onChange={e=>setForm(p=>({...p,brand:e.target.value}))}>
@@ -1651,7 +1678,7 @@ function MobileCardScan({clients,setClients,onClose}:any){
               ✓ 명함 인식 완료! 정보를 확인하고 수정해주세요
             </div>
             <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>전화번호</label><PhoneInput style={{...inp,fontSize:16}} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
             <div><label style={lbl}>이메일</label><input style={{...inp,fontSize:16}} placeholder="example@email.com" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} /></div>
             <div><label style={lbl}>주소</label><input style={{...inp,fontSize:16}} placeholder="서울시 강남구..." value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
             <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
@@ -1703,7 +1730,7 @@ function MobileQuickAdd({clients,setClients,onClose}:any){
         <div style={{fontSize:17,fontWeight:600,color:TX1,marginBottom:20}}>⚡ 당직 고객 빠른 등록</div>
         <div style={{display:'grid',gap:14}}>
           <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-          <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+          <div><label style={lbl}>전화번호</label><PhoneInput style={{...inp,fontSize:16}} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
           <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
           <div><label style={lbl}>메모</label><textarea style={{...inp,fontSize:15,height:80,resize:'none' as const}} placeholder="특이사항 메모..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
           <button style={{...btn('navy'),padding:'14px',fontSize:16,borderRadius:8,marginTop:4}} onClick={save} disabled={saving}>{saving?'저장중...':'저장하기'}</button>
@@ -1773,7 +1800,7 @@ function MobileClients({clients,setClients,onSelect}:any){
         <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:16,marginBottom:14}}>
           <div style={{display:'grid',gap:12}}>
             <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-            <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+            <div><label style={lbl}>전화번호</label><PhoneInput style={{...inp,fontSize:16}} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
             <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
             <div><label style={lbl}>예산</label><input style={{...inp,fontSize:16}} value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
             <div>
@@ -2077,7 +2104,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
       </div>
       <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,padding:16,display:'grid',gap:12}}>
         <div><label style={lbl}>이름</label><input style={{...inp,fontSize:16}} value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
-        <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
+        <div><label style={lbl}>전화번호</label><PhoneInput style={{...inp,fontSize:16}} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
         <div><label style={lbl}>브랜드</label>
           <select style={{...inp,fontSize:16}} value={form.brand} onChange={e=>setForm(p=>({...p,brand:e.target.value}))}>
             <option value="">선택</option>
