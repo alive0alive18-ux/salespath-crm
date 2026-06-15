@@ -231,6 +231,39 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* 알림 허용 안내 */}
+        <section style={{ padding:mounted&&isMobile?'32px 16px':'48px 32px', background:NAVY, borderTop:`1px solid ${NAVY2}` }}>
+          <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center' as const }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>🔔</div>
+            <h2 style={{ fontSize:mounted&&isMobile?22:28, fontWeight:700, color:WHITE, marginBottom:12 }}>알림 허용을 꼭 해주세요!</h2>
+            <p style={{ fontSize:14, color:'#8A9EBF', lineHeight:1.8, marginBottom:24 }}>
+              앱 설치 후 알림을 허용하면<br/>
+              매일 아침 오늘 연락할 고객을 자동으로 알려드려요!<br/>
+              <span style={{ color:GOLD, fontWeight:600 }}>알림 허용 안 하면 자동 알림이 오지 않아요 ⚠️</span>
+            </p>
+            <div style={{ display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr':'1fr 1fr', gap:12, maxWidth:500, margin:'0 auto' }}>
+              <div style={{ background:NAVY2, borderRadius:10, padding:'16px', textAlign:'left' as const }}>
+                <div style={{ fontSize:13, fontWeight:700, color:GOLD, marginBottom:8 }}>🍎 아이폰</div>
+                {['앱 설치 후 열기','상단 알림 허용 팝업에서','허용 탭!'].map((s,i)=>(
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                    <div style={{ width:18, height:18, borderRadius:'50%', background:GOLD, color:NAVY, fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
+                    <span style={{ fontSize:12, color:'#8A9EBF' }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:NAVY2, borderRadius:10, padding:'16px', textAlign:'left' as const }}>
+                <div style={{ fontSize:13, fontWeight:700, color:GOLD, marginBottom:8 }}>🤖 안드로이드</div>
+                {['앱 설치 후 열기','알림 허용 팝업에서','허용 탭!'].map((s,i)=>(
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+                    <div key={i} style={{ width:18, height:18, borderRadius:'50%', background:GOLD, color:NAVY, fontSize:10, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{i+1}</div>
+                    <span style={{ fontSize:12, color:'#8A9EBF' }}>{s}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* 앱 설치 안내 */}
         <section style={{ padding:mounted&&isMobile?'40px 16px':'60px 32px', background:'#F2EDE8', borderTop:`1px solid ${BORDER}` }}>
           <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center' as const }}>
