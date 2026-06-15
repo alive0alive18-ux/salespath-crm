@@ -1427,6 +1427,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
   const [showQuickAdd,setShowQuickAdd]=useState(false)
   const [showCardScan,setShowCardScan]=useState(false)
   const [callMemo,setCallMemo]=useState<any>(null)
+  const [showSmsSheet,setShowSmsSheet]=useState<any>(null)
 
   const tabs=[
     {id:'dashboard',icon:'🏠',label:'홈'},
@@ -1442,6 +1443,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {showQuickAdd&&<MobileQuickAdd clients={clients} setClients={setClients} onClose={()=>setShowQuickAdd(false)} />}
       {showCardScan&&<MobileCardScan clients={clients} setClients={setClients} onClose={()=>setShowCardScan(false)} />}
       {callMemo&&<CallMemoPopup client={callMemo} onClose={()=>setCallMemo(null)} />}
+      {showSmsSheet&&<SmsSheet client={showSmsSheet} templates={templates} onClose={()=>setShowSmsSheet(null)} />}
 
       {/* 상단 헤더 */}
       <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
@@ -1476,7 +1478,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       <div style={{padding:'16px 16px'}}>
         {page==='dashboard'&&<MobileDashboard clients={clients} schedules={schedules} weekSchedules={weekSchedules} setPage={setPage} onSelect={setSelectedClient} salesperson={salesperson} onQuickAdd={()=>setShowQuickAdd(true)} onCardScan={()=>setShowCardScan(true)} />}
         {page==='today'&&<MobileToday schedules={schedules} />}
-        {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} onCall={(c:any)=>{window.location.href=`tel:${c.phone.replace(/-/g,'')}`;setTimeout(()=>setCallMemo(c),3000)}} />}
+        {page==='clients'&&<MobileClients clients={clients} setClients={setClients} onSelect={setSelectedClient} onCall={(c:any)=>{window.location.href=`tel:${c.phone.replace(/-/g,'')}`;setTimeout(()=>setCallMemo(c),3000)}} onSms={(c:any)=>setShowSmsSheet(c)} />}
         {page==='templates'&&<MobileTemplates templates={templates} setTemplates={setTemplates} />}
         {page==='more'&&<MobileMore salesperson={salesperson} setSalesperson={setSalesperson} user={user} partners={partners} setPartners={setPartners} signOut={signOut} setPage={setPage} />}
         {page==='calendar'&&<MobileCalendar setPage={setPage} />}
@@ -1609,6 +1611,128 @@ function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,sales
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+function SmsSheet({client,templates,onClose}:any){
+  const [selected,setSelected]=useState<any>(null)
+  const [preview,setPreview]=useState('')
+
+  const applyTemplate=(t:any)=>{
+    const text=t.content
+      .replace(/\[고객명\]/g,client.name||'고객')
+      .replace(/\[차량명\]/g,client.car_model||client.interest_model||'차량')
+      .replace(/\[이름\]/g,'담당 컨설턴트')
+    setSelected(t)
+    setPreview(text)
+  }
+
+  const sendSms=()=>{
+    const body=encodeURIComponent(preview)
+    const phone=client.phone.replace(/-/g,'')
+    window.location.href=`sms:${phone}${/iPhone|iPad|iPod/.test(navigator.userAgent)?'&':'?'}body=${body}`
+    onClose()
+  }
+
+  const sendKakao=async()=>{
+    await navigator.clipboard.writeText(preview)
+    window.location.href='kakaotalk://'
+    onClose()
+  }
+
+  const CATEGORIES=[{key:'all',label:'전체'},{key:'greeting',label:'안부'},{key:'followup',label:'팔로업'},{key:'inspection',label:'점검'},{key:'birthday',label:'생일'}]
+  const [filter,setFilter]=useState('all')
+  const filtered=filter==='all'?templates:templates.filter((t:any)=>t.category===filter)
+
+  return(
+    <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.85)',display:'flex',alignItems:'flex-end',zIndex:300}} onClick={onClose}>
+      <div style={{background:WHITE,borderRadius:'20px 20px 0 0',width:'100%',maxHeight:'85vh',display:'flex',flexDirection:'column' as const,boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+
+        {/* 핸들 */}
+        <div style={{padding:'16px 20px 0'}}>
+          <div style={{width:40,height:4,background:BORDER,borderRadius:2,margin:'0 auto 16px'}} />
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+            <div style={av(NAVY)}>{client.name?.[0]||'?'}</div>
+            <div>
+              <div style={{fontSize:16,fontWeight:600,color:TX1}}>{client.name}</div>
+              <div style={{fontSize:12,color:TX3}}>{client.phone}</div>
+            </div>
+          </div>
+        </div>
+
+        {!selected?(
+          <>
+            {/* 카테고리 필터 */}
+            <div style={{padding:'0 16px',marginBottom:10}}>
+              <div style={{display:'flex',gap:8,overflowX:'auto' as const,paddingBottom:4}}>
+                {CATEGORIES.map(c=>(
+                  <button key={c.key} onClick={()=>setFilter(c.key)}
+                    style={{padding:'6px 14px',borderRadius:20,fontSize:12,cursor:'pointer',flexShrink:0,
+                    background:filter===c.key?NAVY:CREAM,color:filter===c.key?WHITE:TX2,
+                    border:`1px solid ${filter===c.key?NAVY:BORDER}`,fontWeight:filter===c.key?600:400}}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 템플릿 목록 */}
+            <div style={{flex:1,overflowY:'auto' as const,padding:'0 16px 20px'}}>
+              {filtered.length===0&&(
+                <div style={{padding:'32px',textAlign:'center' as const,color:TX3,fontSize:14}}>
+                  템플릿이 없어요<br/>
+                  <span style={{fontSize:12}}>문자 템플릿 메뉴에서 추가해주세요</span>
+                </div>
+              )}
+              {filtered.map((t:any,i:number)=>(
+                <div key={t.id} onClick={()=>applyTemplate(t)}
+                  style={{background:CREAM,border:`1px solid ${BORDER}`,borderRadius:12,padding:'14px 16px',marginBottom:10,cursor:'pointer'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+                    <div style={{fontSize:14,fontWeight:600,color:TX1}}>{t.title}</div>
+                    <div style={{fontSize:11,color:GOLD_TX,background:GOLD_BG,padding:'3px 8px',borderRadius:10,border:`1px solid ${GOLD}40`}}>선택</div>
+                  </div>
+                  <div style={{fontSize:12,color:TX3,lineHeight:1.5,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as const}}>
+                    {t.content.replace(/\[고객명\]/g,client.name).replace(/\[차량명\]/g,client.car_model||'차량').replace(/\[이름\]/g,'담당 컨설턴트')}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ):(
+          <>
+            {/* 미리보기 */}
+            <div style={{flex:1,overflowY:'auto' as const,padding:'0 16px'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+                <div style={{fontSize:14,fontWeight:600,color:TX1}}>📝 미리보기</div>
+                <button onClick={()=>setSelected(null)} style={{fontSize:12,color:BLUE,background:'transparent',border:'none',cursor:'pointer'}}>← 다시 선택</button>
+              </div>
+              <div style={{background:'#F0F0F0',borderRadius:16,padding:'14px 16px',marginBottom:16,position:'relative' as const}}>
+                <div style={{position:'absolute' as const,bottom:-6,left:20,width:12,height:12,background:'#F0F0F0',transform:'rotate(45deg)'}} />
+                <div style={{fontSize:14,color:TX1,lineHeight:1.8,whiteSpace:'pre-wrap' as const}}>{preview}</div>
+              </div>
+              <textarea
+                style={{...inp,fontSize:14,height:100,resize:'none' as const,marginBottom:16}}
+                value={preview}
+                onChange={e=>setPreview(e.target.value)}
+                placeholder="내용 수정 가능..."
+              />
+            </div>
+
+            {/* 발송 버튼 */}
+            <div style={{padding:'0 16px 40px',display:'grid',gap:10}}>
+              <button onClick={sendSms}
+                style={{width:'100%',padding:'15px',borderRadius:12,fontSize:15,fontWeight:600,cursor:'pointer',border:'none',background:GREEN,color:WHITE,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <span style={{fontSize:20}}>💬</span> 문자로 보내기
+              </button>
+              <button onClick={sendKakao}
+                style={{width:'100%',padding:'15px',borderRadius:12,fontSize:15,fontWeight:600,cursor:'pointer',border:'none',background:'#FEE500',color:'#3A1D1D',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                <span style={{fontSize:20}}>💛</span> 카카오톡으로 보내기 (복사 후 이동)
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
@@ -1823,7 +1947,7 @@ function MobileToday({schedules}:any){
   )
 }
 
-function MobileClients({clients,setClients,onSelect,onCall}:any){
+function MobileClients({clients,setClients,onSelect,onCall,onSms}:any){
   const supabase=createClient()
   const [search,setSearch]=useState('')
   const [showAdd,setShowAdd]=useState(false)
@@ -1883,6 +2007,7 @@ function MobileClients({clients,setClients,onSelect,onCall}:any){
               </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
                 {c.phone&&<button onClick={e=>{e.stopPropagation();onCall(c)}} style={{width:36,height:36,borderRadius:'50%',background:GREEN_BG,border:`1px solid ${GREEN_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>📞</button>}
+                {c.phone&&<button onClick={e=>{e.stopPropagation();onSms(c)}} style={{width:36,height:36,borderRadius:'50%',background:BLUE_BG,border:`1px solid ${BLUE_BD}`,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:16}}>✉️</button>}
                 <span style={badge(stg.color,stg.bg,stg.bd)} onClick={()=>onSelect(c)}>{stg.label}</span>
               </div>
             </div>
