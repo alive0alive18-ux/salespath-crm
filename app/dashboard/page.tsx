@@ -324,9 +324,17 @@ export default function Home(){
       if(!('serviceWorker' in navigator)||!('Notification' in window)) return
       try {
         const reg=await navigator.serviceWorker.register('/sw.js')
-        console.log('SW registered:', reg)
-        if(Notification.permission==='default'){
-          await Notification.requestPermission()
+        const permission=await Notification.requestPermission()
+        if(permission!=='granted') return
+        const sub=await reg.pushManager.subscribe({
+          userVisibleOnly:true,
+          applicationServerKey:process.env.NEXT_PUBLIC_VAPID_KEY
+        })
+        const{data:{user}}=await supabase.auth.getUser()
+        if(user){
+          await supabase.from('salespersons').update({
+            push_subscription:JSON.stringify(sub)
+          }).eq('id',user.id)
         }
       } catch(e){ console.log('SW error:', e) }
     }
