@@ -1431,6 +1431,25 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
   const [isOnDuty,setIsOnDuty]=useState(false)
   const [showDutySummary,setShowDutySummary]=useState(false)
   const [dutyClients,setDutyClients]=useState<any[]>([])
+  const supabaseMobile=createClient()
+
+  const startDuty=async()=>{
+    const{data:{user:u}}=await supabaseMobile.auth.getUser()
+    if(!u) return
+    await supabaseMobile.from('salespersons').update({is_on_duty:true,duty_start:new Date().toISOString()}).eq('id',u.id)
+    setIsOnDuty(true)
+  }
+
+  const endDuty=async()=>{
+    const{data:{user:u}}=await supabaseMobile.auth.getUser()
+    if(!u) return
+    const today=new Date().toISOString().split('T')[0]
+    const{data}=await supabaseMobile.from('clients').select('*').eq('duty_date',today).eq('salesperson_id',u.id)
+    setDutyClients(data||[])
+    await supabaseMobile.from('salespersons').update({is_on_duty:false,duty_start:null}).eq('id',u.id)
+    setIsOnDuty(false)
+    setShowDutySummary(true)
+  }
 
   const tabs=[
     {id:'dashboard',icon:'🏠',label:'홈'},
