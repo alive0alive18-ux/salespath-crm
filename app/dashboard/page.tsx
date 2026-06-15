@@ -21,8 +21,9 @@ const STAGES = [
 const getStage = (key:string) => STAGES.find(s=>s.key===key) || STAGES[0]
 
 function formatPhone(v:string) {
-  // +8210 → 010 자동 변환
-  v = v.replace(/^\+82[-.\s]?10/, '010').replace(/^\+82/, '0')
+  // +82, 82, +8210, 8210 → 010 자동 변환
+  v = v.replace(/^\+82[-.\s]?0?/, '0')
+  v = v.replace(/^82[-.\s]?0?/, '0')
   const n=v.replace(/\D/g,'')
   if(n.length<=3) return n
   if(n.length<=7) return `${n.slice(0,3)}-${n.slice(3)}`
