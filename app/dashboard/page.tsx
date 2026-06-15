@@ -394,24 +394,6 @@ export default function Home(){
 
   const signOut=async()=>{await supabase.auth.signOut();router.push('/login')}
 
-  const startDuty=async()=>{
-    const{data:{user:u}}=await supabase.auth.getUser()
-    if(!u) return
-    await supabase.from('salespersons').update({is_on_duty:true,duty_start:new Date().toISOString()}).eq('id',u.id)
-    setIsOnDuty(true)
-  }
-
-  const endDuty=async()=>{
-    const{data:{user:u}}=await supabase.auth.getUser()
-    if(!u) return
-    const today=new Date().toISOString().split('T')[0]
-    const{data}=await supabase.from('clients').select('*').eq('duty_date',today).eq('salesperson_id',u.id)
-    setDutyClients(data||[])
-    await supabase.from('salespersons').update({is_on_duty:false,duty_start:null}).eq('id',u.id)
-    setIsOnDuty(false)
-    setShowDutySummary(true)
-  }
-
   const nav=[
     {id:'dashboard',label:'대시보드'},
     {id:'today',label:'오늘의 리스트'},
