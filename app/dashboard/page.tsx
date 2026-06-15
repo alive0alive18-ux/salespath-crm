@@ -394,6 +394,24 @@ export default function Home(){
 
   const signOut=async()=>{await supabase.auth.signOut();router.push('/login')}
 
+  const startDuty=async()=>{
+    const{data:{user:u}}=await supabase.auth.getUser()
+    if(!u) return
+    await supabase.from('salespersons').update({is_on_duty:true,duty_start:new Date().toISOString()}).eq('id',u.id)
+    setIsOnDuty(true)
+  }
+
+  const endDuty=async()=>{
+    const{data:{user:u}}=await supabase.auth.getUser()
+    if(!u) return
+    const today=new Date().toISOString().split('T')[0]
+    const{data}=await supabase.from('clients').select('*').eq('duty_date',today).eq('salesperson_id',u.id)
+    setDutyClients(data||[])
+    await supabase.from('salespersons').update({is_on_duty:false,duty_start:null}).eq('id',u.id)
+    setIsOnDuty(false)
+    setShowDutySummary(true)
+  }
+
   const nav=[
     {id:'dashboard',label:'대시보드'},
     {id:'today',label:'오늘의 리스트'},
@@ -1428,6 +1446,9 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
   const [showCardScan,setShowCardScan]=useState(false)
   const [callMemo,setCallMemo]=useState<any>(null)
   const [showSmsSheet,setShowSmsSheet]=useState<any>(null)
+  const [isOnDuty,setIsOnDuty]=useState(false)
+  const [showDutySummary,setShowDutySummary]=useState(false)
+  const [dutyClients,setDutyClients]=useState<any[]>([])
 
   const tabs=[
     {id:'dashboard',icon:'🏠',label:'홈'},
@@ -1444,6 +1465,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {showCardScan&&<MobileCardScan clients={clients} setClients={setClients} onClose={()=>setShowCardScan(false)} />}
       {callMemo&&<CallMemoPopup client={callMemo} onClose={()=>setCallMemo(null)} />}
       {showSmsSheet&&<SmsSheet client={showSmsSheet} templates={templates} onClose={()=>setShowSmsSheet(null)} />}
+      {showDutySummary&&<DutySummary clients={dutyClients} onClose={()=>setShowDutySummary(false)} />}
 
       {/* 상단 헤더 */}
       <div style={{background:NAVY,padding:'16px 20px 12px',position:'sticky',top:0,zIndex:50}}>
@@ -1463,7 +1485,16 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
           </div>
           <div style={{textAlign:'right' as const}}>
             <div style={{fontSize:13,color:WHITE,fontWeight:500}}>{salesperson?.name||user?.email}</div>
-            <div style={{fontSize:11,color:NAVY3}}>{salesperson?.brand||''}</div>
+            <div style={{fontSize:11,color:NAVY3,marginBottom:4}}>{salesperson?.brand||''}</div>
+            {!isOnDuty?(
+              <button onClick={startDuty} style={{background:GOLD,color:NAVY,border:'none',borderRadius:6,padding:'4px 10px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                🏪 출근 · 당직 시작
+              </button>
+            ):(
+              <button onClick={endDuty} style={{background:RED,color:WHITE,border:'none',borderRadius:6,padding:'4px 10px',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                🚪 퇴근 · 당직 종료
+              </button>
+            )}
           </div>
         </div>
         {schedules.length>0&&(
@@ -1611,6 +1642,62 @@ function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,sales
             </div>
           )
         })}
+      </div>
+    </div>
+  )
+}
+
+function DutySummary({clients,onClose}:any){
+  const contracted=clients.filter((c:any)=>c.stage==='contract'||c.stage==='delivered')
+  const hot=clients.filter((c:any)=>c.stage==='quote'||c.stage==='test_drive')
+  const now=new Date()
+  const timeStr=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`
+
+  return(
+    <div style={{position:'fixed',inset:0,background:'rgba(27,42,74,0.9)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:400,padding:20}}>
+      <div style={{background:WHITE,borderRadius:20,width:'100%',maxWidth:360,overflow:'hidden',boxShadow:'0 24px 80px rgba(0,0,0,0.4)'}}>
+        <div style={{background:NAVY,padding:'24px 20px',textAlign:'center' as const}}>
+          <div style={{fontSize:32,marginBottom:8}}>🏪</div>
+          <div style={{fontSize:18,fontWeight:700,color:WHITE,marginBottom:4}}>당직 종료</div>
+          <div style={{fontSize:13,color:NAVY3}}>{timeStr} 퇴근</div>
+        </div>
+        <div style={{padding:'20px'}}>
+          <div style={{fontSize:14,fontWeight:600,color:TX1,marginBottom:14}}>오늘 당직 결과</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:16}}>
+            {[
+              {l:'총 고객',v:clients.length,c:NAVY},
+              {l:'HOT 고객',v:hot.length,c:GOLD_TX},
+              {l:'계약',v:contracted.length,c:GREEN},
+            ].map((s,i)=>(
+              <div key={i} style={{background:CREAM,borderRadius:10,padding:'12px 8px',textAlign:'center' as const}}>
+                <div style={{fontSize:22,fontWeight:700,color:s.c}}>{s.v}</div>
+                <div style={{fontSize:11,color:TX3,marginTop:2}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          {clients.length>0&&(
+            <div style={{background:CREAM,borderRadius:10,padding:'14px',marginBottom:16}}>
+              <div style={{fontSize:12,fontWeight:600,color:TX2,marginBottom:8}}>오늘 등록 고객</div>
+              {clients.map((c:any,i:number)=>{
+                const stg=STAGES.find(s=>s.key===c.stage)||STAGES[0]
+                return(
+                  <div key={c.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:i===clients.length-1?0:8}}>
+                    <div style={{fontSize:13,color:TX1,fontWeight:500}}>{c.name}</div>
+                    <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {clients.length===0&&(
+            <div style={{padding:'20px',textAlign:'center' as const,color:TX3,fontSize:14,marginBottom:16}}>
+              오늘 등록한 당직 고객이 없어요
+            </div>
+          )}
+          <button style={{...btn('navy'),width:'100%',padding:'14px',borderRadius:10,fontSize:15}} onClick={onClose}>
+            확인
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -1893,7 +1980,9 @@ function MobileQuickAdd({clients,setClients,onClose}:any){
   const save=async()=>{
     if(!form.name) return;setSaving(true)
     const{data:{user}}=await supabase.auth.getUser()
-    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,interest_model:form.interest_model||null,memo:form.memo||null,stage:'first_visit'}).select()
+    const today=new Date().toISOString().split('T')[0]
+    const{data:sp}=await supabase.from('salespersons').select('is_on_duty').eq('id',user?.id).single()
+    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,interest_model:form.interest_model||null,memo:form.memo||null,stage:'first_visit',from_duty:sp?.is_on_duty||false,duty_date:sp?.is_on_duty?today:null}).select()
     if(data) setClients((p:any)=>[data[0],...p])
     onClose()
   }
