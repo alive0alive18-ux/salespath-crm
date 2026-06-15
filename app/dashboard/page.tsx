@@ -653,7 +653,7 @@ function Clients({clients,setClients,onSelect}:any){
   const save=async()=>{
     if(!form.name) return;setSaving(true)
     const{data:{user}}=await supabase.auth.getUser()
-    const ins:any={salesperson_id:user?.id,name:form.name,phone:form.phone||null,car_model:form.car_model||null,address:form.address||null,memo:form.memo||null,stage:form.stage,interest_model:form.interest_model||null,budget:form.budget||null}
+    const ins:any={salesperson_id:user?.id,name:form.name,phone:form.phone||null,car_model:form.car_model||null,address:form.address||null,memo:form.memo||null,stage:form.stage,interest_model:form.interest_model||null}
     if(form.consultation_date) ins.consultation_date=form.consultation_date
     const{data}=await supabase.from('clients').insert(ins).select()
     if(data) setClients((p:any)=>[data[0],...p])
@@ -683,7 +683,7 @@ function Clients({clients,setClients,onSelect}:any){
             <div><label style={lbl}>이름 *</label><input style={inp} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
             <div><label style={lbl}>전화번호</label><input style={inp} placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
             <div><label style={lbl}>관심 차종</label><input style={inp} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
-            <div><label style={lbl}>예산</label><input style={inp} placeholder="1억 이하" value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
+            <div style={{gridColumn:'1/-1'}}><label style={lbl}>메모</label><textarea style={{...inp,height:80,resize:'none' as const}} placeholder="특이사항 메모..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
             {!quickMode&&<>
               <div style={{gridColumn:'1/-1'}}><label style={lbl}>계약 차량 모델</label><input style={inp} placeholder="E 350 4MATIC" value={form.car_model} onChange={e=>setForm(p=>({...p,car_model:e.target.value}))} /></div>
               <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><input style={inp} placeholder="서울시 강남구..." value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
@@ -1557,13 +1557,13 @@ function MobileDashboard({clients,schedules,weekSchedules,setPage,onSelect,sales
 
 function MobileQuickAdd({clients,setClients,onClose}:any){
   const supabase=createClient()
-  const [form,setForm]=useState({name:'',phone:'',interest_model:'',budget:''})
+  const [form,setForm]=useState({name:'',phone:'',interest_model:'',memo:''})
   const [saving,setSaving]=useState(false)
 
   const save=async()=>{
     if(!form.name) return;setSaving(true)
     const{data:{user}}=await supabase.auth.getUser()
-    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,interest_model:form.interest_model||null,budget:form.budget||null,stage:'first_visit'}).select()
+    const{data}=await supabase.from('clients').insert({salesperson_id:user?.id,name:form.name,phone:form.phone||null,interest_model:form.interest_model||null,memo:form.memo||null,stage:'first_visit'}).select()
     if(data) setClients((p:any)=>[data[0],...p])
     onClose()
   }
@@ -1577,7 +1577,7 @@ function MobileQuickAdd({clients,setClients,onClose}:any){
           <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
           <div><label style={lbl}>전화번호</label><input style={{...inp,fontSize:16}} type="tel" placeholder="010-0000-0000" value={form.phone} onChange={e=>setForm(p=>({...p,phone:formatPhone(e.target.value)}))} /></div>
           <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
-          <div><label style={lbl}>예산</label><input style={{...inp,fontSize:16}} placeholder="1억 이하" value={form.budget} onChange={e=>setForm(p=>({...p,budget:e.target.value}))} /></div>
+          <div><label style={lbl}>메모</label><textarea style={{...inp,fontSize:15,height:80,resize:'none' as const}} placeholder="특이사항 메모..." value={form.memo} onChange={e=>setForm(p=>({...p,memo:e.target.value}))} /></div>
           <button style={{...btn('navy'),padding:'14px',fontSize:16,borderRadius:8,marginTop:4}} onClick={save} disabled={saving}>{saving?'저장중...':'저장하기'}</button>
         </div>
       </div>
