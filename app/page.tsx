@@ -264,6 +264,63 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* 연락처 불러오기 안내 */}
+        <section style={{ padding:mounted&&isMobile?'40px 16px':'60px 32px', background:WHITE }}>
+          <div style={{ maxWidth:900, margin:'0 auto' }}>
+            <div style={{ textAlign:'center' as const, marginBottom:36 }}>
+              <div style={{ fontSize:11, color:GOLD_TX, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Import Contacts</div>
+              <h2 style={{ fontSize:mounted&&isMobile?24:32, fontWeight:700, color:TX1, marginBottom:12 }}>📥 기존 고객을 한번에 불러오세요</h2>
+              <p style={{ fontSize:14, color:TX2, lineHeight:1.7 }}>아이폰·삼성 연락처를 파일 하나로 SalesPath에 바로 등록할 수 있어요!</p>
+            </div>
+
+            <div style={{ display:'grid', gridTemplateColumns:mounted&&isMobile?'1fr':'1fr 1fr 1fr', gap:16, marginBottom:32 }}>
+              {[
+                {
+                  icon:'🍎',
+                  title:'아이폰 연락처',
+                  color:'#555555',
+                  steps:['icloud.com 접속 후 로그인','연락처 → 전체 선택','내보내기 → .vcf 저장','SalesPath에 업로드!']
+                },
+                {
+                  icon:'🤖',
+                  title:'삼성 갤럭시',
+                  color:'#1D9E75',
+                  steps:['연락처 앱 실행','설정 → 연락처 내보내기','.vcf 파일로 저장','SalesPath에 업로드!']
+                },
+                {
+                  icon:'📊',
+                  title:'엑셀로 직접 등록',
+                  color:BLUE,
+                  steps:['SalesPath에서 양식 다운로드','이름·전화번호 입력','.csv로 저장','SalesPath에 업로드!']
+                },
+              ].map((f,i)=>(
+                <div key={i} style={{ background:CREAM, border:`1px solid ${BORDER}`, borderRadius:12, padding:'22px 20px', borderTop:`3px solid ${f.color}` }}>
+                  <div style={{ fontSize:32, marginBottom:10 }}>{f.icon}</div>
+                  <div style={{ fontSize:15, fontWeight:700, color:TX1, marginBottom:14 }}>{f.title}</div>
+                  {f.steps.map((s,j)=>(
+                    <div key={j} style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
+                      <div style={{ width:22, height:22, borderRadius:'50%', background:f.color, color:WHITE, fontSize:11, fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{j+1}</div>
+                      <span style={{ fontSize:13, color:j===3?f.color:TX2, fontWeight:j===3?600:400 }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background:NAVY, borderRadius:12, padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap' as const, gap:12 }}>
+              <div>
+                <div style={{ fontSize:15, fontWeight:700, color:WHITE, marginBottom:4 }}>📌 지원 파일 형식</div>
+                <div style={{ fontSize:13, color:'#8A9EBF' }}>.vcf (아이폰·삼성) · .csv · .xlsx (엑셀) 전부 OK!</div>
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                {['.vcf','.csv','.xlsx'].map(ext=>(
+                  <div key={ext} style={{ background:NAVY2, color:GOLD, borderRadius:6, padding:'6px 14px', fontSize:13, fontWeight:600 }}>{ext}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* 앱 설치 안내 */}
         <section style={{ padding:mounted&&isMobile?'40px 16px':'60px 32px', background:'#F2EDE8', borderTop:`1px solid ${BORDER}` }}>
           <div style={{ maxWidth:700, margin:'0 auto', textAlign:'center' as const }}>
