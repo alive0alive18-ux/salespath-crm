@@ -20,28 +20,32 @@ const STAGES = [
 ]
 const getStage = (key:string) => STAGES.find(s=>s.key===key) || STAGES[0]
 
-function DaumAddressInput({value,onChange,style}:any){
+function DaumAddressInput({value,onChange,onCoords,style}:any){
   const open=()=>{
     if(typeof window==='undefined') return
-    const script=document.createElement('script')
-    script.src='//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
-    script.onload=()=>{
+    const doOpen=()=>{
       new (window as any).daum.Postcode({
         oncomplete:(data:any)=>{
           const addr=data.roadAddress||data.jibunAddress
           onChange(addr)
+          // 좌표도 같이 저장
+          if(onCoords&&data.roadAddress){
+            const geocoder=new (window as any).kakao?.maps?.services?.Geocoder?.()
+            // 다음 API에서 x,y 좌표 제공
+            if(data.x&&data.y){
+              onCoords({lat:parseFloat(data.y),lng:parseFloat(data.x)})
+            }
+          }
         }
       }).open()
     }
     if(!(window as any).daum?.Postcode){
+      const script=document.createElement('script')
+      script.src='//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+      script.onload=doOpen
       document.head.appendChild(script)
     } else {
-      new (window as any).daum.Postcode({
-        oncomplete:(data:any)=>{
-          const addr=data.roadAddress||data.jibunAddress
-          onChange(addr)
-        }
-      }).open()
+      doOpen()
     }
   }
 
@@ -174,7 +178,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
   const [confirmDelete,setConfirmDelete]=useState(false)
   const [form,setForm]=useState({
     name:client.name||'',phone:client.phone||'',email:client.email||'',
-    address:client.address||'',address_detail:client.address_detail||'',contact_place:client.contact_place||'',
+    address:client.address||'',address_detail:client.address_detail||'',lat:client.lat||null,lng:client.lng||null,contact_place:client.contact_place||'',
     previous_car:client.previous_car||'',memo:client.memo||'',
     car_model:client.car_model||'',delivery_date:client.delivery_date||'',
     car_year:client.car_year||'',car_color:client.car_color||'',
@@ -204,7 +208,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
 
   const save=async()=>{
     setSaving(true)
-    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,address_detail:form.address_detail||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,purchase_type:form.purchase_type||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
+    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,address_detail:form.address_detail||null,lat:form.lat||null,lng:form.lng||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,purchase_type:form.purchase_type||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
     if(form.delivery_date) u.delivery_date=form.delivery_date
     if(form.consultation_date) u.consultation_date=form.consultation_date
     if(form.birthday) u.birthday=form.birthday
@@ -280,7 +284,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
                 <div><label style={lbl}>생일</label><input style={inp} type="date" value={form.birthday} onChange={e=>setForm(p=>({...p,birthday:e.target.value}))} /></div>
                 <div><label style={lbl}>최초 컨택 장소</label><input style={inp} value={form.contact_place} onChange={e=>setForm(p=>({...p,contact_place:e.target.value}))} /></div>
                 <div><label style={lbl}>기존 차량</label><input style={inp} value={form.previous_car} onChange={e=>setForm(p=>({...p,previous_car:e.target.value}))} /></div>
-                <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><DaumAddressInput value={form.address} onChange={(addr:string)=>setForm(p=>({...p,address:addr}))} /></div>
+                <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><DaumAddressInput value={form.address} onChange={(addr:string)=>setForm(p=>({...p,address:addr}))} onCoords={(coords:any)=>setForm(p=>({...p,lat:coords.lat,lng:coords.lng}))} /></div>
                 <div style={{gridColumn:'1/-1'}}><label style={lbl}>상세 주소</label><input style={inp} placeholder="동/호수 등 상세주소..." value={form.address_detail||''} onChange={e=>setForm(p=>({...p,address_detail:e.target.value}))} /></div>
                 <div style={{gridColumn:'1/-1'}}><label style={lbl}>상세 주소</label><input style={inp} placeholder="동/호수 등 상세주소..." value={form.address_detail||''} onChange={e=>setForm(p=>({...p,address_detail:e.target.value}))} /></div>
                 <div><label style={lbl}>최초 상담일</label><input style={inp} type="date" value={form.consultation_date} onChange={e=>setForm(p=>({...p,consultation_date:e.target.value}))} /></div>
@@ -1480,15 +1484,23 @@ function ClientMap({clients}:any){
     document.head.appendChild(s)
   },[])
 
-  // 2. 주소 → 좌표 변환
+  // 2. 주소 → 좌표 변환 (저장된 좌표 우선, 없으면 구글 Geocoding)
   useEffect(()=>{
-    if(!withAddress.length||!API_KEY) return
+    if(!withAddress.length) return
     setLoading(true)
     const run=async()=>{
       const results:any[]=[]
       for(const c of withAddress.slice(0,30)){
+        // DB에 좌표가 저장된 경우 바로 사용
+        if(c.lat&&c.lng){
+          results.push(c)
+          continue
+        }
+        // 없으면 구글 Geocoding
+        if(!API_KEY) continue
         try{
-          const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(c.address)}&key=${API_KEY}&language=ko`)
+          const encoded=encodeURIComponent(c.address)
+          const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encoded}&key=${API_KEY}&language=ko&region=KR`)
           const d=await r.json()
           if(d.results?.[0]){
             const loc=d.results[0].geometry.location
