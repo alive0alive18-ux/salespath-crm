@@ -23,6 +23,7 @@ export default function LandingPage() {
   const features = [
     { icon:'⚡', title:'당직 고객 빠른 등록', desc:'이름, 전화번호, 관심 차종으로 10초 안에 등록', color:GOLD },
     { icon:'🗓️', title:'스마트 자동 알림', desc:'인도일 입력 하나로 감사문자·점검 알림이 자동 생성돼요. 알림 보고 원클릭 발송!', color:GREEN },
+    { icon:'🗺️', title:'고객 지도', desc:'고객 주소를 지도에 핀으로 표시. 오늘 방문할 고객 동선을 한눈에 파악!', color:'#E91E8C' },
     { icon:'📊', title:'계약 단계 관리', desc:'첫방문→시승→견적→계약→출고 한눈에', color:PURPLE },
     { icon:'💬', title:'문자 템플릿', desc:'자주 쓰는 문자 저장, 원클릭 복사', color:BLUE },
     { icon:'🎂', title:'생일 & 기념일 알림', desc:'고객 생일, 인도 기념일 자동 알림', color:'#E91E8C' },
@@ -83,7 +84,7 @@ export default function LandingPage() {
               고객을 절대<br />놓치지 마세요
             </h1>
             <p style={{ color:'#8A9EBF', lineHeight:1.7, marginBottom:28 }}>
-              차량 인도일 하나만 입력하면<br />감사문자부터 3년 점검 안내까지 자동으로
+              차량 인도일 하나만 입력하면<br />감사문자·점검 알림 타이밍을 자동으로 알려드려요
             </p>
             <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' as const }}>
               <button onClick={()=>router.push('/login')} style={{ padding:'13px 30px', borderRadius:6, fontSize:15, fontWeight:600, cursor:'pointer', border:'none', background:GOLD, color:WHITE }}>
@@ -138,12 +139,12 @@ export default function LandingPage() {
         <section style={{ padding:mounted&&isMobile?'40px 16px':'72px 32px', background:NAVY }}>
           <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' as const }}>
             <div style={{ fontSize:11, color:GOLD, fontWeight:600, letterSpacing:'.1em', textTransform:'uppercase' as const, marginBottom:10 }}>Automation</div>
-            <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />모든 게 자동으로</h2>
+            <h2 style={{ fontSize:36, fontWeight:700, color:WHITE, marginBottom:12 }}>인도일 하나로<br />연락 타이밍을 놓치지 마세요</h2>
             <p style={{ fontSize:15, color:'#8A9EBF', lineHeight:1.7, marginBottom:40 }}>차량 인도일만 입력하면 연락 알림이 자동으로 생성돼요. 알림을 보고 문자 템플릿으로 빠르게 발송하세요!</p>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))', gap:8, alignItems:'center' }}>
               {[
                 { day:'인도일', label:'차량 인도', color:GOLD },
-                { day:'+3일', label:'감사 문자', color:'#1D9E75' },
+                { day:'+3일', label:'감사 알림', color:'#1D9E75' },
                 { day:'+1년', label:'1년 점검', color:'#378ADD' },
                 { day:'+2년', label:'2년 점검', color:'#378ADD' },
                 { day:'+3년', label:'3년 점검', color:'#378ADD' },
