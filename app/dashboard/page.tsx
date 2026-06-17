@@ -475,6 +475,7 @@ export default function Home(){
     {id:'calendar',label:'캘린더'},
     {id:'report',label:'실적 리포트'},
     {id:'import',label:'연락처 불러오기'},
+    {id:'map',label:'고객 지도'},
     {id:'profile',label:'프로필 설정'},
   ]
 
@@ -525,6 +526,7 @@ export default function Home(){
         {page==='report'&&<Report clients={clients} />}
         {page==='profile'&&<Profile salesperson={salesperson} setSalesperson={setSalesperson} user={user} />}
         {page==='import'&&<ImportContacts setClients={setClients} user={user} />}
+        {page==='map'&&<ClientMap clients={clients} />}
       </main>
     </div>
   )
@@ -1395,6 +1397,140 @@ function Report({clients}:any){
   )
 }
 
+function ClientMap({clients}:any){
+  const [selected,setSelected]=useState<any>(null)
+  const [geocoded,setGeocoded]=useState<any[]>([])
+  const [loading,setLoading]=useState(false)
+  const [filter,setFilter]=useState('all')
+  const API_KEY=process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
+
+  const filtered=filter==='all'?clients:clients.filter((c:any)=>c.stage===filter)
+  const withAddress=filtered.filter((c:any)=>c.address)
+
+  useEffect(()=>{
+    const geocode=async()=>{
+      if(!withAddress.length||!API_KEY) return
+      setLoading(true)
+      const results=[]
+      for(const client of withAddress.slice(0,20)){
+        try{
+          const res=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(client.address)}&key=${API_KEY}&language=ko`)
+          const data=await res.json()
+          if(data.results?.[0]){
+            const loc=data.results[0].geometry.location
+            results.push({...client,lat:loc.lat,lng:loc.lng})
+          }
+        }catch(e){}
+      }
+      setGeocoded(results)
+      setLoading(false)
+    }
+    geocode()
+  },[filter,clients])
+
+  const stg=getStage(selected?.stage||'first_visit')
+  const mapUrl=geocoded.length>0
+    ?`https://www.google.com/maps/embed/v1/search?key=${API_KEY}&q=${encodeURIComponent(geocoded.map(c=>c.address).join('|'))}&zoom=11&language=ko`
+    :`https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=서울&language=ko`
+
+  return(
+    <div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
+        <div>
+          <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>🗺️ 고객 지도</div>
+          <div style={{fontSize:13,color:TX3}}>주소가 등록된 고객 {withAddress.length}명</div>
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap' as const}}>
+          <button onClick={()=>setFilter('all')} style={{...btn(),background:filter==='all'?NAVY:WHITE,color:filter==='all'?CREAM:TX2,border:`1px solid ${filter==='all'?NAVY:BORDER}`}}>전체</button>
+          {STAGES.map(s=>(
+            <button key={s.key} onClick={()=>setFilter(s.key)} style={{...btn(),background:filter===s.key?s.bg:WHITE,color:filter===s.key?s.color:TX2,border:`1px solid ${filter===s.key?s.color:BORDER}`}}>{s.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {withAddress.length===0&&(
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'48px',textAlign:'center' as const,color:TX3,fontSize:14}}>
+          <div style={{fontSize:32,marginBottom:12}}>🗺️</div>
+          <div style={{fontWeight:500,color:TX1,marginBottom:8}}>주소가 등록된 고객이 없어요</div>
+          <div style={{fontSize:13}}>고객 정보에 주소를 입력하면 지도에 표시돼요!</div>
+        </div>
+      )}
+
+      {withAddress.length>0&&(
+        <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:16}}>
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden'}}>
+            {loading?(
+              <div style={{height:500,display:'flex',alignItems:'center',justifyContent:'center',color:TX3,fontSize:14}}>
+                <div style={{textAlign:'center' as const}}>
+                  <div style={{fontSize:32,marginBottom:12}}>⏳</div>
+                  주소 변환 중...
+                </div>
+              </div>
+            ):(
+              <iframe
+                width="100%"
+                height="500"
+                style={{border:'none',display:'block'}}
+                src={`https://www.google.com/maps/embed/v1/search?key=${API_KEY}&q=${encodeURIComponent(withAddress.slice(0,5).map((c:any)=>c.address).join(' OR '))}&language=ko`}
+              />
+            )}
+          </div>
+
+          <div style={{display:'flex',flexDirection:'column' as const,gap:0,background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',maxHeight:500,overflowY:'auto' as const}}>
+            <div style={{padding:'14px 16px',borderBottom:`1px solid ${BORDER2}`,fontSize:13,fontWeight:600,color:TX1,position:'sticky' as const,top:0,background:WHITE}}>
+              주소 등록 고객 {withAddress.length}명
+            </div>
+            {withAddress.map((c:any,i:number)=>{
+              const stg=getStage(c.stage||'first_visit')
+              return(
+                <div key={c.id} onClick={()=>setSelected(selected?.id===c.id?null:c)}
+                  style={{padding:'12px 16px',borderBottom:i===withAddress.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer',background:selected?.id===c.id?CREAM:WHITE,transition:'background .1s'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
+                    <div style={av(NAVY)}>{c.name?.[0]||'?'}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
+                      <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
+                    </div>
+                  </div>
+                  <div style={{fontSize:11,color:TX3,paddingLeft:46}}>{c.address}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {selected&&(
+        <div style={{...card,marginTop:16}}>
+          <div style={cardH}>
+            <span>{selected.name} 고객 정보</span>
+            <button style={{...btn(),fontSize:12}} onClick={()=>setSelected(null)}>✕</button>
+          </div>
+          <div style={{padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            {[
+              {l:'전화번호',v:selected.phone||'—'},
+              {l:'단계',v:getStage(selected.stage).label},
+              {l:'관심 차종',v:selected.interest_model||selected.car_model||'—'},
+              {l:'주소',v:selected.address||'—'},
+            ].map((r,i)=>(
+              <div key={i}>
+                <div style={{fontSize:11,color:TX3,marginBottom:3}}>{r.l}</div>
+                <div style={{fontSize:14,color:TX1,fontWeight:500}}>{r.v}</div>
+              </div>
+            ))}
+          </div>
+          {selected.phone&&(
+            <div style={{padding:'0 20px 16px',display:'flex',gap:8}}>
+              <a href={`tel:${selected.phone.replace(/-/g,'')}`} style={{...btn('navy'),textDecoration:'none',display:'flex',alignItems:'center',gap:6}}>📞 전화</a>
+              <a href={`https://maps.google.com/?q=${encodeURIComponent(selected.address)}`} target="_blank" rel="noreferrer" style={{...btn(),textDecoration:'none',display:'flex',alignItems:'center',gap:6}}>🗺️ 길찾기</a>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ImportContacts({setClients,user}:any){
   const [importing,setImporting]=useState(false)
   const [result,setResult]=useState<any>(null)
@@ -1694,6 +1830,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
         {page==='report'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>실적 리포트</div></div><Report clients={clients} /></div>}
         {page==='partners'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>제휴업체</div></div><Partners partners={partners} setPartners={setPartners} /></div>}
         {page==='import'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>연락처 불러오기</div></div><ImportContacts setClients={setClients} user={user} /></div>}
+        {page==='map'&&<div><div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}><button style={{...btn(),padding:'6px 12px',borderRadius:8}} onClick={()=>setPage('more')}>← 뒤로</button><div style={{fontSize:18,fontWeight:600,color:TX1}}>고객 지도</div></div><ClientMap clients={clients} /></div>}
       </div>
 
       {/* 하단 탭바 */}
@@ -2545,6 +2682,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
     {id:'report',icon:'📊',label:'실적 리포트'},
     {id:'partners',icon:'🤝',label:'제휴업체'},
     {id:'import',icon:'📥',label:'연락처 불러오기'},
+    {id:'map',icon:'🗺️',label:'고객 지도'},
   ]
 
   if(section==='profile') return(
@@ -2575,7 +2713,7 @@ function MobileMore({salesperson,setSalesperson,user,partners,setPartners,signOu
       <div style={{background:WHITE,borderRadius:8,border:`1px solid ${BORDER}`,overflow:'hidden',marginBottom:14}}>
         {menus.map((m,i)=>(
           <div key={m.id} style={{display:'flex',alignItems:'center',padding:'16px',gap:14,borderBottom:i===menus.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer'}}
-            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'||m.id==='import'?setPage(m.id):setSection(m.id)}>
+            onClick={()=>m.id==='calendar'||m.id==='report'||m.id==='partners'||m.id==='import'||m.id==='map'?setPage(m.id):setSection(m.id)}>
             <span style={{fontSize:22}}>{m.icon}</span>
             <span style={{fontSize:15,color:TX1,fontWeight:500}}>{m.label}</span>
             <span style={{marginLeft:'auto',color:TX3,fontSize:16}}>›</span>
