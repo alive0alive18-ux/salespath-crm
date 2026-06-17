@@ -1446,143 +1446,133 @@ function Report({clients}:any){
 
 function ClientMap({clients}:any){
   const mapRef=useRef<HTMLDivElement>(null)
-  const mapInstance=useRef<any>(null)
-  const markersRef=useRef<any[]>([])
-  const infoWindowRef=useRef<any>(null)
   const [selected,setSelected]=useState<any>(null)
   const [geocoded,setGeocoded]=useState<any[]>([])
   const [loading,setLoading]=useState(false)
   const [filter,setFilter]=useState('all')
+  const [mapReady,setMapReady]=useState(false)
+  const mapObj=useRef<any>(null)
+  const markers=useRef<any[]>([])
+  const infoWin=useRef<any>(null)
   const API_KEY=process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY
 
   const filtered=filter==='all'?clients:clients.filter((c:any)=>c.stage===filter)
   const withAddress=filtered.filter((c:any)=>c.address)
 
-  // 단계별 핀 색깔
-  const stageColors:Record<string,string>={
-    first_visit:'#888888',
-    test_drive:'#1D4ED8',
-    quote:'#D97706',
-    contract:'#6D28D9',
-    delivered:'#2D6A4F',
+  const PIN_COLORS:Record<string,string>={
+    first_visit:'#888888',test_drive:'#1D4ED8',
+    quote:'#D97706',contract:'#6D28D9',delivered:'#2D6A4F'
   }
 
-  // 주소 → 좌표 변환
+  // 1. Google Maps 스크립트 로드
   useEffect(()=>{
-    const geocode=async()=>{
-      if(!withAddress.length||!API_KEY) return
-      setLoading(true)
-      const results=[]
-      for(const client of withAddress.slice(0,30)){
+    if((window as any).google?.maps){setMapReady(true);return}
+    if(document.getElementById('gmap-script')){
+      const check=setInterval(()=>{
+        if((window as any).google?.maps){setMapReady(true);clearInterval(check)}
+      },200)
+      return
+    }
+    const s=document.createElement('script')
+    s.id='gmap-script'
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&language=ko`
+    s.onload=()=>setMapReady(true)
+    document.head.appendChild(s)
+  },[])
+
+  // 2. 주소 → 좌표 변환
+  useEffect(()=>{
+    if(!withAddress.length||!API_KEY) return
+    setLoading(true)
+    const run=async()=>{
+      const results:any[]=[]
+      for(const c of withAddress.slice(0,30)){
         try{
-          const res=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(client.address)}&key=${API_KEY}&language=ko`)
-          const data=await res.json()
-          if(data.results?.[0]){
-            const loc=data.results[0].geometry.location
-            results.push({...client,lat:loc.lat,lng:loc.lng})
+          const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(c.address)}&key=${API_KEY}&language=ko`)
+          const d=await r.json()
+          if(d.results?.[0]){
+            const loc=d.results[0].geometry.location
+            results.push({...c,lat:loc.lat,lng:loc.lng})
           }
         }catch(e){}
       }
       setGeocoded(results)
       setLoading(false)
     }
-    geocode()
+    run()
   },[filter,clients])
 
-  // 지도 초기화
+  // 3. 지도 + 마커 초기화
   useEffect(()=>{
-    if(!API_KEY||!mapRef.current||geocoded.length===0) return
-    const initMap=()=>{
-      if(!(window as any).google?.maps) return
-      const center=geocoded.length>0?{lat:geocoded[0].lat,lng:geocoded[0].lng}:{lat:37.5665,lng:126.9780}
-      const map=new (window as any).google.maps.Map(mapRef.current,{
-        center,zoom:11,
+    if(!mapReady||!mapRef.current||geocoded.length===0) return
+    const G=(window as any).google.maps
+    
+    if(!mapObj.current){
+      mapObj.current=new G.Map(mapRef.current,{
+        center:{lat:37.5665,lng:126.9780},zoom:11,
         styles:[{featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]}]
       })
-      mapInstance.current=map
-      infoWindowRef.current=new (window as any).google.maps.InfoWindow()
+      infoWin.current=new G.InfoWindow()
+    }
 
-      // 기존 마커 제거
-      markersRef.current.forEach(m=>m.setMap(null))
-      markersRef.current=[]
+    // 기존 마커 제거
+    markers.current.forEach(m=>m.setMap(null))
+    markers.current=[]
 
-      // 마커 추가
-      geocoded.forEach(client=>{
-        const color=stageColors[client.stage]||'#888888'
-        const stg=getStage(client.stage||'first_visit')
-        const marker=new (window as any).google.maps.Marker({
-          position:{lat:client.lat,lng:client.lng},
-          map,
-          title:client.name,
-          icon:{
-            path:(window as any).google.maps.SymbolPath.CIRCLE,
-            scale:10,
-            fillColor:color,
-            fillOpacity:1,
-            strokeColor:'white',
-            strokeWeight:2,
-          },
-          label:{text:client.name[0],color:'white',fontSize:'11px',fontWeight:'bold'}
-        })
-
-        marker.addListener('click',()=>{
-          infoWindowRef.current.setContent(`
-            <div style="padding:8px;min-width:160px;font-family:sans-serif">
-              <div style="font-weight:600;font-size:14px;margin-bottom:4px">${client.name}</div>
-              <div style="font-size:12px;color:#666;margin-bottom:4px">${stg.label} · ${client.interest_model||client.car_model||'차종 미정'}</div>
-              <div style="font-size:11px;color:#999">${client.address}</div>
-              ${client.phone?`<a href="tel:${client.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 10px;background:#1B2A4A;color:white;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}
-            </div>
-          `)
-          infoWindowRef.current.open(map,marker)
-          setSelected(client)
-        })
-        markersRef.current.push(marker)
+    // 마커 추가
+    geocoded.forEach((c,i)=>{
+      const color=PIN_COLORS[c.stage]||'#888'
+      const stg=getStage(c.stage||'first_visit')
+      const m=new G.Marker({
+        position:{lat:c.lat,lng:c.lng},
+        map:mapObj.current,
+        title:c.name,
+        icon:{
+          path:G.SymbolPath.CIRCLE,
+          scale:11,
+          fillColor:color,
+          fillOpacity:1,
+          strokeColor:'#fff',
+          strokeWeight:2,
+        },
+        label:{text:c.name[0],color:'#fff',fontSize:'11px',fontWeight:'bold'}
       })
+      m.addListener('click',()=>{
+        infoWin.current.setContent(`<div style="padding:10px;min-width:180px;font-family:sans-serif"><b style="font-size:14px">${c.name}</b><br/><span style="font-size:12px;color:#666">${stg.label} · ${c.interest_model||c.car_model||'차종 미정'}</span><br/><span style="font-size:11px;color:#999">${c.address}</span>${c.phone?`<br/><a href="tel:${c.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 12px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}</div>`)
+        infoWin.current.open(mapObj.current,m)
+        setSelected(c)
+      })
+      markers.current.push(m)
+    })
 
-      // 전체 보이도록 bounds 조정
-      if(geocoded.length>1){
-        const bounds=new (window as any).google.maps.LatLngBounds()
-        geocoded.forEach(c=>bounds.extend({lat:c.lat,lng:c.lng}))
-        map.fitBounds(bounds)
-      }
+    // 전체 보이도록 bounds 조정
+    if(geocoded.length>1){
+      const bounds=new G.LatLngBounds()
+      geocoded.forEach(c=>bounds.extend({lat:c.lat,lng:c.lng}))
+      mapObj.current.fitBounds(bounds)
+    } else if(geocoded.length===1){
+      mapObj.current.setCenter({lat:geocoded[0].lat,lng:geocoded[0].lng})
+      mapObj.current.setZoom(14)
     }
+  },[mapReady,geocoded])
 
-    if((window as any).google?.maps){
-      initMap()
-    } else {
-      const script=document.createElement('script')
-      script.src=`https://maps.googleapis.com/maps/api/js?key=${API_KEY}&language=ko`
-      script.onload=initMap
-      document.head.appendChild(script)
-    }
-  },[geocoded])
-
-  // 고객 클릭 시 해당 위치로 이동
-  const focusClient=(client:any)=>{
-    setSelected(client)
-    if(!mapInstance.current) return
-    mapInstance.current.panTo({lat:client.lat,lng:client.lng})
-    mapInstance.current.setZoom(15)
-    const idx=geocoded.findIndex((c:any)=>c.id===client.id)
-    const marker=markersRef.current[idx]
-    if(marker&&infoWindowRef.current){
-      const stg=getStage(client.stage||'first_visit')
-      infoWindowRef.current.setContent(`
-        <div style="padding:8px;min-width:160px;font-family:sans-serif">
-          <div style="font-weight:600;font-size:14px;margin-bottom:4px">${client.name}</div>
-          <div style="font-size:12px;color:#666;margin-bottom:4px">${stg.label} · ${client.interest_model||client.car_model||'차종 미정'}</div>
-          <div style="font-size:11px;color:#999">${client.address}</div>
-          ${client.phone?`<a href="tel:${client.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 10px;background:#1B2A4A;color:white;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}
-        </div>
-      `)
-      infoWindowRef.current.open(mapInstance.current,marker)
+  const focusClient=(c:any)=>{
+    setSelected(c)
+    if(!mapObj.current) return
+    mapObj.current.panTo({lat:c.lat,lng:c.lng})
+    mapObj.current.setZoom(15)
+    const idx=geocoded.findIndex((g:any)=>g.id===c.id)
+    const m=markers.current[idx]
+    if(m&&infoWin.current){
+      const stg=getStage(c.stage||'first_visit')
+      infoWin.current.setContent(`<div style="padding:10px;min-width:180px;font-family:sans-serif"><b style="font-size:14px">${c.name}</b><br/><span style="font-size:12px;color:#666">${stg.label} · ${c.interest_model||c.car_model||'차종 미정'}</span><br/><span style="font-size:11px;color:#999">${c.address}</span>${c.phone?`<br/><a href="tel:${c.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 12px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}</div>`)
+      infoWin.current.open(mapObj.current,m)
     }
   }
 
   return(
     <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:16}}>
         <div>
           <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>🗺️ 고객 지도</div>
           <div style={{fontSize:13,color:TX3}}>주소가 등록된 고객 {withAddress.length}명</div>
@@ -1595,58 +1585,52 @@ function ClientMap({clients}:any){
         </div>
       </div>
 
-      {/* 단계별 색상 범례 */}
-      <div style={{display:'flex',gap:12,marginBottom:16,flexWrap:'wrap' as const}}>
+      <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap' as const}}>
         {STAGES.map(s=>(
-          <div key={s.key} style={{display:'flex',alignItems:'center',gap:6}}>
-            <div style={{width:12,height:12,borderRadius:'50%',background:stageColors[s.key]}} />
+          <div key={s.key} style={{display:'flex',alignItems:'center',gap:5}}>
+            <div style={{width:10,height:10,borderRadius:'50%',background:PIN_COLORS[s.key]}} />
             <span style={{fontSize:12,color:TX2}}>{s.label}</span>
           </div>
         ))}
       </div>
 
-      {withAddress.length===0&&(
-        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'48px',textAlign:'center' as const,color:TX3,fontSize:14}}>
+      {withAddress.length===0?(
+        <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'48px',textAlign:'center' as const,color:TX3}}>
           <div style={{fontSize:32,marginBottom:12}}>🗺️</div>
           <div style={{fontWeight:500,color:TX1,marginBottom:8}}>주소가 등록된 고객이 없어요</div>
           <div style={{fontSize:13}}>고객 정보에 주소를 입력하면 지도에 표시돼요!</div>
         </div>
-      )}
-
-      {withAddress.length>0&&(
+      ):(
         <div style={{display:'grid',gridTemplateColumns:'1fr 300px',gap:16}}>
           <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',position:'relative' as const}}>
             {loading&&(
-              <div style={{position:'absolute' as const,inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,0.9)',zIndex:10}}>
-                <div style={{textAlign:'center' as const}}>
-                  <div style={{fontSize:32,marginBottom:8}}>⏳</div>
-                  <div style={{fontSize:14,color:TX3}}>주소 변환 중...</div>
-                </div>
+              <div style={{position:'absolute' as const,inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,0.9)',zIndex:10,flexDirection:'column' as const,gap:8}}>
+                <div style={{fontSize:28}}>⏳</div>
+                <div style={{fontSize:13,color:TX3}}>주소 변환 중...</div>
               </div>
             )}
             <div ref={mapRef} style={{width:'100%',height:520}} />
           </div>
-
-          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',maxHeight:520,overflowY:'auto' as const}}>
-            <div style={{padding:'14px 16px',borderBottom:`1px solid ${BORDER2}`,fontSize:13,fontWeight:600,color:TX1,position:'sticky' as const,top:0,background:WHITE,zIndex:1}}>
+          <div style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',maxHeight:520,display:'flex',flexDirection:'column' as const}}>
+            <div style={{padding:'14px 16px',borderBottom:`1px solid ${BORDER2}`,fontSize:13,fontWeight:600,color:TX1,background:WHITE,flexShrink:0}}>
               고객 목록 {geocoded.length}명
             </div>
-            {geocoded.map((c:any,i:number)=>{
-              const stg=getStage(c.stage||'first_visit')
-              return(
-                <div key={c.id} onClick={()=>focusClient(c)}
-                  style={{padding:'12px 16px',borderBottom:i===geocoded.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer',background:selected?.id===c.id?CREAM:WHITE,transition:'background .1s'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
-                    <div style={{width:10,height:10,borderRadius:'50%',background:stageColors[c.stage]||'#888',flexShrink:0}} />
-                    <div style={{flex:1}}>
+            <div style={{overflowY:'auto' as const,flex:1}}>
+              {geocoded.map((c:any,i:number)=>{
+                const stg=getStage(c.stage||'first_visit')
+                return(
+                  <div key={c.id} onClick={()=>focusClient(c)}
+                    style={{padding:'12px 16px',borderBottom:i===geocoded.length-1?'none':`1px solid ${BORDER2}`,cursor:'pointer',background:selected?.id===c.id?CREAM:WHITE,transition:'background .1s'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                      <div style={{width:10,height:10,borderRadius:'50%',background:PIN_COLORS[c.stage]||'#888',flexShrink:0}} />
                       <div style={{fontSize:14,fontWeight:500,color:TX1}}>{c.name}</div>
                       <span style={badge(stg.color,stg.bg,stg.bd)}>{stg.label}</span>
                     </div>
+                    <div style={{fontSize:11,color:TX3,paddingLeft:18}}>{c.address}</div>
                   </div>
-                  <div style={{fontSize:11,color:TX3,paddingLeft:20}}>{c.address}</div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -1662,12 +1646,7 @@ function ClientMap({clients}:any){
             </div>
           </div>
           <div style={{padding:'16px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-            {[
-              {l:'전화번호',v:selected.phone||'—'},
-              {l:'단계',v:getStage(selected.stage).label},
-              {l:'관심 차종',v:selected.interest_model||selected.car_model||'—'},
-              {l:'주소',v:selected.address||'—'},
-            ].map((r,i)=>(
+            {[{l:'전화번호',v:selected.phone||'—'},{l:'단계',v:getStage(selected.stage).label},{l:'관심 차종',v:selected.interest_model||selected.car_model||'—'},{l:'주소',v:selected.address||'—'}].map((r,i)=>(
               <div key={i}>
                 <div style={{fontSize:11,color:TX3,marginBottom:3}}>{r.l}</div>
                 <div style={{fontSize:14,color:TX1,fontWeight:500}}>{r.v}</div>
