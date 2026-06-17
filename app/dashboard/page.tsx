@@ -20,6 +20,51 @@ const STAGES = [
 ]
 const getStage = (key:string) => STAGES.find(s=>s.key===key) || STAGES[0]
 
+function DaumAddressInput({value,onChange,style}:any){
+  const open=()=>{
+    if(typeof window==='undefined') return
+    const script=document.createElement('script')
+    script.src='//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+    script.onload=()=>{
+      new (window as any).daum.Postcode({
+        oncomplete:(data:any)=>{
+          const addr=data.roadAddress||data.jibunAddress
+          onChange(addr)
+        }
+      }).open()
+    }
+    if(!(window as any).daum?.Postcode){
+      document.head.appendChild(script)
+    } else {
+      new (window as any).daum.Postcode({
+        oncomplete:(data:any)=>{
+          const addr=data.roadAddress||data.jibunAddress
+          onChange(addr)
+        }
+      }).open()
+    }
+  }
+
+  return(
+    <div style={{display:'flex',gap:8}}>
+      <input
+        style={{...(style||inp),flex:1}}
+        placeholder="주소 검색 버튼을 눌러주세요"
+        value={value}
+        onChange={e=>onChange(e.target.value)}
+        readOnly
+      />
+      <button
+        type="button"
+        onClick={open}
+        style={{...btn('navy'),whiteSpace:'nowrap' as const,padding:'10px 16px',flexShrink:0}}
+      >
+        🔍 검색
+      </button>
+    </div>
+  )
+}
+
 function formatPhone(v:string) {
   // +82, 82, +8210, 8210 → 010 자동 변환
   v = v.replace(/^\+82[-.\s]?0?/, '0')
@@ -235,7 +280,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
                 <div><label style={lbl}>생일</label><input style={inp} type="date" value={form.birthday} onChange={e=>setForm(p=>({...p,birthday:e.target.value}))} /></div>
                 <div><label style={lbl}>최초 컨택 장소</label><input style={inp} value={form.contact_place} onChange={e=>setForm(p=>({...p,contact_place:e.target.value}))} /></div>
                 <div><label style={lbl}>기존 차량</label><input style={inp} value={form.previous_car} onChange={e=>setForm(p=>({...p,previous_car:e.target.value}))} /></div>
-                <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><input style={inp} value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
+                <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><DaumAddressInput value={form.address} onChange={(addr:string)=>setForm(p=>({...p,address:addr}))} /></div>
                 <div><label style={lbl}>최초 상담일</label><input style={inp} type="date" value={form.consultation_date} onChange={e=>setForm(p=>({...p,consultation_date:e.target.value}))} /></div>
                 <div style={{display:'flex',alignItems:'center',gap:10,paddingTop:22}}>
                   <input type="checkbox" id="vip" checked={form.is_vip} onChange={e=>setForm(p=>({...p,is_vip:e.target.checked}))} />
@@ -2258,7 +2303,7 @@ function MobileCardScan({clients,setClients,onClose}:any){
             <div><label style={lbl}>이름 *</label><input style={{...inp,fontSize:16}} placeholder="홍길동" value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} /></div>
             <div><label style={lbl}>전화번호</label><PhoneInput style={{...inp,fontSize:16}} value={form.phone} onChange={(v:string)=>setForm(p=>({...p,phone:v}))} /></div>
             <div><label style={lbl}>이메일</label><input style={{...inp,fontSize:16}} placeholder="example@email.com" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} /></div>
-            <div><label style={lbl}>주소</label><input style={{...inp,fontSize:16}} placeholder="서울시 강남구..." value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} /></div>
+            <div><label style={lbl}>주소</label><DaumAddressInput value={form.address} onChange={(addr:string)=>setForm(p=>({...p,address:addr}))} style={{...inp,fontSize:16}} /></div>
             <div><label style={lbl}>관심 차종</label><input style={{...inp,fontSize:16}} placeholder="GLE 450" value={form.interest_model} onChange={e=>setForm(p=>({...p,interest_model:e.target.value}))} /></div>
             <div>
               <label style={lbl}>상담 단계</label>
