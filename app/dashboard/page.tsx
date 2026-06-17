@@ -174,7 +174,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
   const [confirmDelete,setConfirmDelete]=useState(false)
   const [form,setForm]=useState({
     name:client.name||'',phone:client.phone||'',email:client.email||'',
-    address:client.address||'',contact_place:client.contact_place||'',
+    address:client.address||'',address_detail:client.address_detail||'',contact_place:client.contact_place||'',
     previous_car:client.previous_car||'',memo:client.memo||'',
     car_model:client.car_model||'',delivery_date:client.delivery_date||'',
     car_year:client.car_year||'',car_color:client.car_color||'',
@@ -204,7 +204,7 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
 
   const save=async()=>{
     setSaving(true)
-    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,purchase_type:form.purchase_type||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
+    const u:any={name:form.name,phone:form.phone||null,email:form.email||null,address:form.address||null,address_detail:form.address_detail||null,contact_place:form.contact_place||null,previous_car:form.previous_car||null,memo:form.memo||null,car_model:form.car_model||null,car_year:form.car_year||null,car_color:form.car_color||null,car_number:form.car_number||null,stage:form.stage,interest_model:form.interest_model||null,purchase_type:form.purchase_type||null,competitor:form.competitor||null,is_vip:form.is_vip,referred_by:form.referred_by||null}
     if(form.delivery_date) u.delivery_date=form.delivery_date
     if(form.consultation_date) u.consultation_date=form.consultation_date
     if(form.birthday) u.birthday=form.birthday
@@ -281,6 +281,8 @@ function ClientDetail({client,allClients=[],onClose,onUpdate,onDelete}:any){
                 <div><label style={lbl}>최초 컨택 장소</label><input style={inp} value={form.contact_place} onChange={e=>setForm(p=>({...p,contact_place:e.target.value}))} /></div>
                 <div><label style={lbl}>기존 차량</label><input style={inp} value={form.previous_car} onChange={e=>setForm(p=>({...p,previous_car:e.target.value}))} /></div>
                 <div style={{gridColumn:'1/-1'}}><label style={lbl}>고객 주소</label><DaumAddressInput value={form.address} onChange={(addr:string)=>setForm(p=>({...p,address:addr}))} /></div>
+                <div style={{gridColumn:'1/-1'}}><label style={lbl}>상세 주소</label><input style={inp} placeholder="동/호수 등 상세주소..." value={form.address_detail||''} onChange={e=>setForm(p=>({...p,address_detail:e.target.value}))} /></div>
+                <div style={{gridColumn:'1/-1'}}><label style={lbl}>상세 주소</label><input style={inp} placeholder="동/호수 등 상세주소..." value={form.address_detail||''} onChange={e=>setForm(p=>({...p,address_detail:e.target.value}))} /></div>
                 <div><label style={lbl}>최초 상담일</label><input style={inp} type="date" value={form.consultation_date} onChange={e=>setForm(p=>({...p,consultation_date:e.target.value}))} /></div>
                 <div style={{display:'flex',alignItems:'center',gap:10,paddingTop:22}}>
                   <input type="checkbox" id="vip" checked={form.is_vip} onChange={e=>setForm(p=>({...p,is_vip:e.target.checked}))} />
