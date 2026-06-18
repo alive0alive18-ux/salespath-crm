@@ -645,7 +645,7 @@ function Dashboard({clients,schedules,weekSchedules,setPage,onSelect,salesperson
           {l:'계약·출고',v:contracted.length,s:'이번달',vc:contracted.length>0?GREEN:TX1},
           {l:'VIP 고객',v:vipClients.length,s:'⭐ 관리 중',vc:vipClients.length>0?AMBER:TX1},
         ].map((s,i)=>(
-          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px'}}>
+          <div key={i} onClick={()=>setPage(s.pg)} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'18px 20px',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.boxShadow='0 2px 10px rgba(0,0,0,0.08)'} onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
             <div style={{fontSize:10,color:TX3,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:8,fontWeight:500}}>{s.l}</div>
             <div style={{fontSize:30,fontWeight:400,color:s.vc,letterSpacing:'-.02em'}}>{s.v}</div>
             <div style={{fontSize:12,color:TX3,marginTop:4}}>{s.s}</div>
@@ -1360,7 +1360,7 @@ function Report({clients}:any){
           {l:'계약·출고',v:contracted.length,s:'누적',c:PURPLE},
           {l:'소개 고객',v:referred.length,s:`전체의 ${Math.round(referred.length/total*100)}%`,c:GREEN},
         ].map((s,i)=>(
-          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:4,padding:'18px 20px'}}>
+          <div key={i} onClick={()=>setPage(s.pg)} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'18px 20px',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.boxShadow='0 2px 10px rgba(0,0,0,0.08)'} onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
             <div style={{fontSize:10,color:TX3,textTransform:'uppercase' as const,letterSpacing:'.08em',marginBottom:8,fontWeight:500}}>{s.l}</div>
             <div style={{fontSize:30,fontWeight:400,color:s.c,letterSpacing:'-.02em'}}>{s.v}</div>
             <div style={{fontSize:12,color:TX3,marginTop:4}}>{s.s}</div>
