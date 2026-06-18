@@ -890,7 +890,7 @@ function Clients({clients,setClients,onSelect}:any){
       )}
 
       <div style={{display:'flex',gap:8,marginBottom:10,flexWrap:'wrap' as const}}>
-        {[{key:'all',label:'전체',c:TX1},{key:'delivered',label:'출고 고객',c:GREEN},{key:'prospect',label:'가망 고객',c:BLUE},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`,c:TX2}))].map(cat=>(
+        {[{key:'all',label:'전체',c:TX1},{key:'delivered',label:'출고 고객',c:GREEN},{key:'prospect',label:'가망 고객',c:BLUE},{key:'vip',label:'⭐ VIP',c:AMBER},...Array.from({length:12},(_,i)=>({key:`month_${i+1}`,label:`${i+1}월`,c:TX2}))].map(cat=>(
           <button key={cat.key} onClick={()=>setCategoryFilter(cat.key)} style={{padding:'6px 12px',borderRadius:3,fontSize:12,cursor:'pointer',background:categoryFilter===cat.key?NAVY:WHITE,color:categoryFilter===cat.key?CREAM:TX2,border:`1px solid ${categoryFilter===cat.key?NAVY:BORDER}`,fontWeight:categoryFilter===cat.key?500:400,flexShrink:0}}>
             {cat.label}
           </button>
