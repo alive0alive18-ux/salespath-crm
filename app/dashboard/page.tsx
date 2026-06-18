@@ -537,7 +537,7 @@ export default function Home(){
   return(
     <div style={{display:'flex',minHeight:'100vh',background:CREAM,fontFamily:"'DM Sans','Apple SD Gothic Neo',system-ui,sans-serif",fontSize:14}}>
       {selectedClient&&<ClientDetail client={selectedClient} allClients={clients} onClose={()=>setSelectedClient(null)} onUpdate={(u:any)=>{setClients(p=>p.map(c=>c.id===u.id?u:c));setSelectedClient(u)}} onDelete={(id:string)=>setClients(p=>p.filter(c=>c.id!==id))} />}
-      <aside style={{width:210,background:NAVY,display:'flex',flexDirection:'column',flexShrink:0}}>
+      <aside style={{width:210,background:NAVY,display:'flex',flexDirection:'column',flexShrink:0,height:'100vh',position:'sticky' as const,top:0}}>
         <div style={{padding:'24px 22px 20px',borderBottom:`1px solid ${NAVY2}`,cursor:'pointer'}} onClick={()=>setPage('dashboard')}>
           <div style={{display:'flex',alignItems:'center',gap:12}}>
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
