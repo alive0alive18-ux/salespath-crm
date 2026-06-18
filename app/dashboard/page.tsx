@@ -841,12 +841,12 @@ function Clients({clients,setClients,onSelect}:any){
     <div>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:26}}>
         <div>
-          <div style={{fontSize:24,fontWeight:500,color:TX1,letterSpacing:'-.02em',marginBottom:5}}>고객 관리</div>
-          <div style={{fontSize:13,color:TX3}}>등록 고객 {clients.length}명</div>
+          <div style={{fontSize:22,fontWeight:700,color:TX1,marginBottom:4}}>고객 관리</div>
+          <div style={{fontSize:13,color:TX3,fontWeight:400}}>총 {clients.length}명 등록</div>
         </div>
-        <div style={{display:'flex',gap:8}}>
-          <button style={{...btn(),background:GOLD_BG,color:GOLD_TX,border:`1px solid ${GOLD}60`}} onClick={()=>{setQuickMode(true);setShowForm(true)}}>⚡ 당직 빠른 등록</button>
-          <button style={btn('navy')} onClick={()=>{setQuickMode(false);setShowForm(v=>!v)}}>{showForm&&!quickMode?'✕ 닫기':'+ 고객 등록'}</button>
+        <div style={{display:'flex',gap:6}}>
+          <button style={{padding:'7px 12px',fontSize:12,fontWeight:600,borderRadius:6,cursor:'pointer',background:GOLD_BG,color:GOLD_TX,border:`1px solid ${GOLD}60`}} onClick={()=>{setQuickMode(true);setShowForm(true)}}>⚡ 당직</button>
+          <button style={{padding:'7px 14px',fontSize:12,fontWeight:600,borderRadius:6,cursor:'pointer',background:NAVY,color:WHITE,border:'none'}} onClick={()=>{setQuickMode(false);setShowForm(v=>!v)}}>{showForm&&!quickMode?'✕':'+ 등록'}</button>
         </div>
       </div>
 
