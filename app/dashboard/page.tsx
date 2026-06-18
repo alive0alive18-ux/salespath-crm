@@ -564,7 +564,7 @@ export default function Home(){
         <div style={{padding:'20px 22px',borderTop:`1px solid ${NAVY2}`}}>
           <div style={{fontSize:13,color:CREAM,marginBottom:2,fontWeight:500}}>{salesperson?.name||user?.email} 컨설턴트</div>
           <div style={{fontSize:11,color:NAVY3,marginBottom:14}}>{salesperson?.brand||''}</div>
-          <button style={{width:'100%',padding:'8px',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer',border:'none',background:'#DC2626',color:WHITE,letterSpacing:'.04em'}} onClick={signOut}>로그아웃</button>
+          <button style={{width:'100%',padding:'8px',borderRadius:6,fontSize:12,fontWeight:600,cursor:'pointer',border:'none',background:GOLD,color:NAVY,letterSpacing:'.04em'}} onClick={signOut}>로그아웃</button>
         </div>
       </aside>
       <main style={{flex:1,padding:'32px 40px',overflowY:'auto',background:CREAM}}>
