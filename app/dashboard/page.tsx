@@ -553,7 +553,7 @@ export default function Home(){
             </div>
           </div>
         </div>
-        <div style={{paddingTop:8,flex:1}}>
+        <div style={{paddingTop:8,flex:1,overflowY:'auto' as const}}>
           {nav.map(n=>(
             <div key={n.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',fontSize:14,color:page===n.id?WHITE:'#8A9EBF',background:page===n.id?'#2D4A7A':'transparent',borderRadius:6,margin:'1px 8px',cursor:'pointer',fontWeight:page===n.id?700:400,transition:'all .12s',userSelect:'none'}} onClick={()=>setPage(n.id)}>
               {n.label}
@@ -1550,7 +1550,7 @@ function ClientMap({clients}:any){
         label:{text:c.name[0],color:'#fff',fontSize:'11px',fontWeight:'bold'}
       })
       m.addListener('click',()=>{
-        infoWin.current.setContent(`<div style="padding:10px;min-width:180px;font-family:sans-serif"><div style="font-size:16px;font-weight:800;color:#111;margin-bottom:6px">${c.name}</div><div style="font-size:13px;color:#222;font-weight:700;margin-bottom:4px">${stg.label} · ${c.interest_model||c.car_model||'차종 미정'}</div><div style="font-size:12px;color:#444">${c.address}</div>${c.phone?`<a href="tel:${c.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 12px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}</div>`)
+        infoWin.current.setContent(`<div style="padding:10px;min-width:180px;font-family:sans-serif"><div style="font-size:16px;font-weight:800;color:#000;margin-bottom:6px">${c.name}</div><div style="font-size:13px;color:#222;font-weight:700;color:#111;margin-bottom:4px">${stg.label} · ${c.interest_model||c.car_model||'차종 미정'}</div><div style="font-size:12px;color:#444">${c.address}</div>${c.phone?`<a href="tel:${c.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 12px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}</div>`)
         infoWin.current.open(mapObj.current,m)
         setSelected(c)
       })
@@ -1577,7 +1577,7 @@ function ClientMap({clients}:any){
     const m=markers.current[idx]
     if(m&&infoWin.current){
       const stg=getStage(c.stage||'first_visit')
-      infoWin.current.setContent(`<div style="padding:10px;min-width:180px;font-family:sans-serif"><div style="font-size:16px;font-weight:800;color:#111;margin-bottom:6px">${c.name}</div><div style="font-size:13px;color:#222;font-weight:700;margin-bottom:4px">${stg.label} · ${c.interest_model||c.car_model||'차종 미정'}</div><div style="font-size:12px;color:#444">${c.address}</div>${c.phone?`<a href="tel:${c.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 12px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}</div>`)
+      infoWin.current.setContent(`<div style="padding:10px;min-width:180px;font-family:sans-serif"><div style="font-size:16px;font-weight:800;color:#000;margin-bottom:6px">${c.name}</div><div style="font-size:13px;color:#222;font-weight:700;color:#111;margin-bottom:4px">${stg.label} · ${c.interest_model||c.car_model||'차종 미정'}</div><div style="font-size:12px;color:#444">${c.address}</div>${c.phone?`<a href="tel:${c.phone.replace(/-/g,'')}" style="display:inline-block;margin-top:8px;padding:4px 12px;background:#1B2A4A;color:#fff;border-radius:4px;font-size:12px;text-decoration:none">📞 전화</a>`:''}</div>`)
       infoWin.current.open(mapObj.current,m)
     }
   }
