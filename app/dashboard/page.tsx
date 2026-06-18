@@ -1687,10 +1687,12 @@ function ImportContacts({setClients,user}:any){
       const content=reader.result as string
       const fileType=ext==='vcf'?'vcf':'csv'
       try{
+        const supabaseClient=createClient()
+        const{data:{user:currentUser}}=await supabaseClient.auth.getUser()
         const res=await fetch('/api/import-contacts',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({fileContent:content,fileType,userId:user?.id})
+          body:JSON.stringify({fileContent:content,fileType,userId:currentUser?.id})
         })
         const data=await res.json()
         if(data.error) setError(data.error)
