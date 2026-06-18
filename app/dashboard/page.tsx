@@ -30,7 +30,7 @@ function DaumAddressInput({value,onChange,onCoords,style}:any){
           onChange(addr)
           // 좌표도 같이 저장
           if(onCoords&&data.roadAddress){
-            const geocoder=new (window as any).kakao?.maps?.services?.Geocoder?.()
+            const geocoder=null
             // 다음 API에서 x,y 좌표 제공
             if(data.x&&data.y){
               onCoords({lat:parseFloat(data.y),lng:parseFloat(data.x)})
