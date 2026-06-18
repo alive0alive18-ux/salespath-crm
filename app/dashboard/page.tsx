@@ -1360,7 +1360,7 @@ function Report({clients}:any){
           {l:'계약·출고',v:contracted.length,s:'누적',c:PURPLE},
           {l:'소개 고객',v:referred.length,s:`전체의 ${Math.round(referred.length/total*100)}%`,c:GREEN},
         ].map((s,i)=>(
-          <div key={i} onClick={()=>setPage(['clients','today','clients','clients'][i])} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'18px 20px',cursor:'pointer'}} onMouseEnter={e=>e.currentTarget.style.boxShadow='0 2px 10px rgba(0,0,0,0.08)'} onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
+          <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'18px 20px'}}>
             <div style={{fontSize:10,color:TX3,textTransform:'uppercase' as const,letterSpacing:'.08em',marginBottom:8,fontWeight:500}}>{s.l}</div>
             <div style={{fontSize:30,fontWeight:400,color:s.c,letterSpacing:'-.02em'}}>{s.v}</div>
             <div style={{fontSize:12,color:TX3,marginTop:4}}>{s.s}</div>
