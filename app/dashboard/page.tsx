@@ -2166,10 +2166,14 @@ function SmsSheet({client,templates,onClose}:any){
   const [preview,setPreview]=useState('')
 
   const applyTemplate=(t:any)=>{
-    const text=t.content
+    const 서명=salesperson?.name?`
+
+${salesperson.brand||''}${salesperson.showroom?` ${salesperson.showroom}`:''}
+${salesperson.name} 컨설턴트 드림`:''
+    const text=(t.content
       .replace(/\[고객명\]/g,client.name||'고객')
       .replace(/\[차량명\]/g,client.car_model||client.interest_model||'차량')
-      .replace(/\[이름\]/g,'담당 컨설턴트')
+      .replace(/\[이름\]/g,salesperson?.name||'담당 컨설턴트'))+서명
     setSelected(t)
     setPreview(text)
   }
