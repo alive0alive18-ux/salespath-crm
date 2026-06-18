@@ -1709,12 +1709,24 @@ function ImportContacts({setClients,user}:any){
       <div style={{fontSize:13,color:TX3,marginBottom:24}}>아이폰·안드로이드 연락처를 한번에 가져오세요</div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
         {[
-          {icon:'🍎',title:'아이폰',desc:'iCloud.com → 연락처 → 내보내기 → .vcf 저장'},
-          {icon:'🤖',title:'삼성 갤럭시',desc:'연락처 앱 → 설정 → 연락처 내보내기 → .vcf'},
-          {icon:'📊',title:'엑셀/CSV',desc:'이름, 전화번호 컬럼으로 저장 후 업로드'},
+          {
+            icon:<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#000"/><path d="M18 5.5C19.8 5.5 21.2 6.2 22.1 7.1C20.8 8.2 19.9 9.8 19.9 11.5C19.9 13.4 20.9 15.1 22.4 16C21.6 18.2 20.3 20.2 18.8 21.6C17.5 22.9 16.1 23.5 14.6 23.5C13.1 23.5 12 22.7 10.8 22.7C9.5 22.7 8.2 23.5 6.9 23.5C5.4 23.5 3.9 22.8 2.6 21.4C1 19.7 0 17 0 14.5C0 10 2.8 7.3 5.5 7.3C6.9 7.3 8.1 8.1 9.2 8.1C10.2 8.1 11.6 7.2 13.3 7.2C14.5 7.2 16.4 7.6 18 9C17.3 9.7 16.7 10.6 16.7 11.8C16.7 13.1 17.5 14.3 18.7 14.8C18.5 13.7 18.4 12 19.2 10.5C18.1 9.3 17.3 7.5 18 5.5Z" transform="translate(7,7)" fill="white"/><path d="M11 2C11 2 9 0 7 0C7 2.5 8.5 4.5 10.5 5C10.8 3.8 11 2.8 11 2Z" transform="translate(7,7)" fill="white"/></svg>,
+            title:'아이폰 연락처',
+            desc:'iCloud.com → 연락처 → 내보내기 → .vcf 저장'
+          },
+          {
+            icon:<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#3DDC84"/><path d="M4 16L8 8L20 8L24 16" stroke="white" strokeWidth="2" strokeLinecap="round"/><rect x="6" y="16" width="16" height="10" rx="2" fill="white"/><circle cx="10" cy="21" r="1.5" fill="#3DDC84"/><circle cx="18" cy="21" r="1.5" fill="#3DDC84"/><line x1="5" y1="8" x2="3" y2="5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/><line x1="23" y1="8" x2="25" y2="5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+            title:'삼성 갤럭시',
+            desc:'연락처 앱 → 설정 → 연락처 내보내기 → .vcf'
+          },
+          {
+            icon:<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#217346"/><rect x="8" y="8" width="20" height="20" rx="1" fill="white" fillOpacity="0.15"/><line x1="8" y1="14" x2="28" y2="14" stroke="white" strokeWidth="1" strokeOpacity="0.5"/><line x1="8" y1="20" x2="28" y2="20" stroke="white" strokeWidth="1" strokeOpacity="0.5"/><line x1="16" y1="8" x2="16" y2="28" stroke="white" strokeWidth="1" strokeOpacity="0.5"/><text x="10" y="13" fill="white" fontSize="5" fontWeight="bold">X</text><rect x="9" y="15" width="6" height="4" fill="#90EE90" fillOpacity="0.6"/><rect x="9" y="21" width="6" height="4" fill="#90EE90" fillOpacity="0.4"/><rect x="17" y="15" width="10" height="4" fill="white" fillOpacity="0.3"/><rect x="17" y="21" width="10" height="4" fill="white" fillOpacity="0.2"/></svg>,
+            title:'엑셀/CSV',
+            desc:'이름, 전화번호 컬럼으로 저장 후 업로드'
+          },
         ].map((f,i)=>(
           <div key={i} style={{background:WHITE,border:`1px solid ${BORDER}`,borderRadius:8,padding:'16px'}}>
-            <div style={{fontSize:28,marginBottom:8}}>{f.icon}</div>
+            <div style={{marginBottom:10}}>{f.icon}</div>
             <div style={{fontSize:13,fontWeight:600,color:TX1,marginBottom:4}}>{f.title}</div>
             <div style={{fontSize:11,color:TX3,lineHeight:1.5}}>{f.desc}</div>
           </div>
