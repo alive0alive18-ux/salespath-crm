@@ -1932,7 +1932,7 @@ function MobileApp({page,setPage,user,salesperson,setSalesperson,clients,setClie
       {showQuickAdd&&<MobileQuickAdd clients={clients} setClients={setClients} onClose={()=>setShowQuickAdd(false)} />}
       {showCardScan&&<MobileCardScan clients={clients} setClients={setClients} onClose={()=>setShowCardScan(false)} />}
       {callMemo&&<CallMemoPopup client={callMemo} onClose={()=>setCallMemo(null)} />}
-      {showSmsSheet&&<SmsSheet client={showSmsSheet} templates={templates} onClose={()=>setShowSmsSheet(null)} />}
+      {showSmsSheet&&<SmsSheet client={showSmsSheet} templates={templates} onClose={()=>setShowSmsSheet(null)} salesperson={salesperson} />}
       {showDutySummary&&<DutySummary clients={dutyClients} onClose={()=>setShowDutySummary(false)} />}
 
       {/* 상단 헤더 */}
@@ -2173,7 +2173,7 @@ function DutySummary({clients,onClose}:any){
   )
 }
 
-function SmsSheet({client,templates,onClose}:any){
+function SmsSheet({client,templates,onClose,salesperson}:any){
   const [selected,setSelected]=useState<any>(null)
   const [preview,setPreview]=useState('')
 
